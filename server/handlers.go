@@ -482,7 +482,7 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 	authReq, err := s.storage.GetAuthRequest(r.FormValue("req"))
 	if err != nil {
 		s.logger.Errorf("Failed to get auth request: %v", err)
-		s.renderError(r, w, http.StatusInternalServerError, "Database error.")
+		s.renderError(r, w, http.StatusInternalServerError, "Authkey not found")
 		return
 	}
 	if !authReq.LoggedIn {
