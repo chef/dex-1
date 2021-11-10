@@ -1526,7 +1526,7 @@ func (s *Server) tokenErrHelper(w http.ResponseWriter, typ string, description s
 // Validate Auth Request ID
 func (s *Server) isAuthRequestIDValid(id string) bool {
 	// Request ID is a 32 bit encoded string
-	re := regexp.MustCompile(`(?i)^[a-z0-7]$`)
+	re := regexp.MustCompile(`(?i)^[a-z0-7]+$`)
 	return re.Match([]byte(id))
 }
 
