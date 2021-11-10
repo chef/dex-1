@@ -303,6 +303,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 	if !s.isAuthRequestIDValid(authReqID) {
 		s.logger.Errorf("Invalid auth request id")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
+		return
 	}
 
 	authReq, err := s.storage.GetAuthRequest(authReqID)
@@ -437,6 +438,7 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 	if !s.isAuthRequestIDValid(authID) {
 		s.logger.Errorf("Invalid auth request id")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
+		return
 	}
 
 	authReq, err := s.storage.GetAuthRequest(authID)
@@ -580,6 +582,7 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 	if !s.isAuthRequestIDValid(secureID) {
 		s.logger.Errorf("Invalid auth request")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
+		return
 	}
 
 	authReq, err := s.storage.GetAuthRequest(secureID)
@@ -627,6 +630,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 	if !s.isAuthRequestIDValid(authReq.ID) {
 		s.logger.Errorf("Invalid auth request")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
+		return
 	}
 
 	if err := s.storage.DeleteAuthRequest(authReq.ID); err != nil {
@@ -830,6 +834,7 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 	if !s.isAuthRequestIDValid(code) {
 		s.logger.Errorf("Invalid auth code")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid auth code passed")
+		return
 	}
 
 	authCode, err := s.storage.GetAuthCode(code)
@@ -886,6 +891,7 @@ func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCo
 	if !s.isAuthRequestIDValid(authCode.ID) {
 		s.logger.Errorf("Invalid auth code")
 		s.tokenErrHelper(w, errInvalidRequest, "Invalid auth code passed", http.StatusBadRequest)
+		return nil, fmt.Error("Invalid auth code")
 	}
 
 	accessToken, err := s.newAccessToken(client.ID, authCode.Claims, authCode.Scopes, authCode.Nonce, authCode.ConnectorID)
