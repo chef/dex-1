@@ -891,7 +891,7 @@ func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCo
 	if !s.isAuthRequestIDValid(authCode.ID) {
 		s.logger.Errorf("Invalid auth code")
 		s.tokenErrHelper(w, errInvalidRequest, "Invalid auth code passed", http.StatusBadRequest)
-		return nil, fmt.Error("Invalid auth code")
+		return nil, fmt.Errorf("invalid auth code")
 	}
 
 	accessToken, err := s.newAccessToken(client.ID, authCode.Claims, authCode.Scopes, authCode.Nonce, authCode.ConnectorID)
