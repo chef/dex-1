@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -299,13 +300,18 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 	authReqID := r.FormValue("req")
 
+	if !s.isAuthRequestIDValid(authReqID) {
+		s.logger.Errorf("Invalid auth request id")
+		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
+	}
+
 	authReq, err := s.storage.GetAuthRequest(authReqID)
 	if err != nil {
 		s.logger.Errorf("Failed to get auth request: %v", err)
 		if err == storage.ErrNotFound {
 			s.renderError(r, w, http.StatusBadRequest, "Login session expired.")
 		} else {
-			s.renderError(r, w, http.StatusInternalServerError, "Database error.")
+			s.renderError(r, w, http.StatusInternalServerError, "Auth Request ID not found")
 		}
 		return
 	}
@@ -321,7 +327,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := s.storage.UpdateAuthRequest(authReqID, updater); err != nil {
 			s.logger.Errorf("Failed to set connector ID on auth request: %v", err)
-			s.renderError(r, w, http.StatusInternalServerError, "Database error.")
+			s.renderError(r, w, http.StatusInternalServerError, "Auth Request ID not found")
 			return
 		}
 	}
@@ -428,6 +434,11 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	if !s.isAuthRequestIDValid(authID) {
+		s.logger.Errorf("Invalid auth request id")
+		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
+	}
+
 	authReq, err := s.storage.GetAuthRequest(authID)
 	if err != nil {
 		if err == storage.ErrNotFound {
@@ -436,7 +447,7 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		s.logger.Errorf("Failed to get auth request: %v", err)
-		s.renderError(r, w, http.StatusInternalServerError, "Database error.")
+		s.renderError(r, w, http.StatusInternalServerError, "Auth Request ID not found")
 		return
 	}
 
@@ -565,10 +576,16 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 }
 
 func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
-	authReq, err := s.storage.GetAuthRequest(r.FormValue("req"))
+	secureID := r.FormValue("req")
+	if !s.isAuthRequestIDValid(secureID) {
+		s.logger.Errorf("Invalid auth request")
+		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
+	}
+
+	authReq, err := s.storage.GetAuthRequest(secureID)
 	if err != nil {
 		s.logger.Errorf("Failed to get auth request: %v", err)
-		s.renderError(r, w, http.StatusInternalServerError, "Authkey not found")
+		s.renderError(r, w, http.StatusInternalServerError, "Auth Request ID not found")
 		return
 	}
 	if !authReq.LoggedIn {
@@ -605,6 +622,11 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 	if s.now().After(authReq.Expiry) {
 		s.renderError(r, w, http.StatusBadRequest, "User session has expired.")
 		return
+	}
+
+	if !s.isAuthRequestIDValid(authReq.ID) {
+		s.logger.Errorf("Invalid auth request")
+		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
 	}
 
 	if err := s.storage.DeleteAuthRequest(authReq.ID); err != nil {
@@ -805,6 +827,11 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 	code := r.PostFormValue("code")
 	redirectURI := r.PostFormValue("redirect_uri")
 
+	if !s.isAuthRequestIDValid(code) {
+		s.logger.Errorf("Invalid auth code")
+		s.renderError(r, w, http.StatusBadRequest, "Invalid auth code passed")
+	}
+
 	authCode, err := s.storage.GetAuthCode(code)
 	if err != nil || s.now().After(authCode.Expiry) || authCode.ClientID != client.ID {
 		if err != storage.ErrNotFound {
@@ -856,6 +883,11 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 }
 
 func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCode, client storage.Client) (*accessTokenReponse, error) {
+	if !s.isAuthRequestIDValid(authCode.ID) {
+		s.logger.Errorf("Invalid auth code")
+		s.tokenErrHelper(w, errInvalidRequest, "Invalid auth code passed", http.StatusBadRequest)
+	}
+
 	accessToken, err := s.newAccessToken(client.ID, authCode.Claims, authCode.Scopes, authCode.Nonce, authCode.ConnectorID)
 	if err != nil {
 		s.logger.Errorf("failed to create new access token: %v", err)
@@ -1489,6 +1521,13 @@ func (s *Server) tokenErrHelper(w http.ResponseWriter, typ string, description s
 	if err := tokenErr(w, typ, description, statusCode); err != nil {
 		s.logger.Errorf("token error response: %v", err)
 	}
+}
+
+// Validate Auth Request ID
+func (s *Server) isAuthRequestIDValid(id string) bool {
+	// Request ID is a 32 bit encoded string
+	re := regexp.MustCompile(`(?i)^[a-z0-7]$`)
+	return re.Match([]byte(id))
 }
 
 // Check for username prompt override from connector. Defaults to "Username".
