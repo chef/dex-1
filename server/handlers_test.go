@@ -310,3 +310,29 @@ func TestHandleAuthCode(t *testing.T) {
 		})
 	}
 }
+func TestHandleInvalidApprovalCode(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	httpServer, server := newTestServer(ctx, t, func(c *Config) {
+		c.Storage = &emptyStorage{c.Storage}
+	})
+	defer httpServer.Close()
+
+	tests := []struct {
+		TargetURI    string
+		ExpectedCode int
+	}{
+		{"/approval?req=etsk5jfjfq2ao7s2pfthls72m%20HTTP/1.1", http.StatusBadRequest},
+		{"/approval?req=ProbePhishing", http.StatusBadRequest},
+	}
+
+	rr := httptest.NewRecorder()
+
+	for i, r := range tests {
+		server.ServeHTTP(rr, httptest.NewRequest("GET", r.TargetURI, nil))
+		if rr.Code != r.ExpectedCode {
+			t.Fatalf("test %d expected %d, got %d", i, r.ExpectedCode, rr.Code)
+		}
+	}
+}
