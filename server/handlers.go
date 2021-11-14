@@ -214,7 +214,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 	authReqID := r.FormValue("req")
 
-	if !s.isAuthRequestIDValid(authReqID) {
+	if !s.validateBase32EncodedId(authReqID) {
 		s.logger.Errorf("Invalid auth request id")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
 		return
@@ -349,7 +349,7 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if !s.isAuthRequestIDValid(authID) {
+	if !s.validateBase32EncodedId(authID) {
 		s.logger.Errorf("Invalid auth request id")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid Auth Request ID")
 		return
@@ -493,7 +493,7 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 
 func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 	secureID := r.FormValue("req")
-	if !s.isAuthRequestIDValid(secureID) {
+	if !s.validateBase32EncodedId(secureID) {
 		s.logger.Errorf("Invalid auth request")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
 		return
@@ -541,7 +541,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	if !s.isAuthRequestIDValid(authReq.ID) {
+	if !s.validateBase32EncodedId(authReq.ID) {
 		s.logger.Errorf("Invalid auth request")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid requestID passed")
 		return
@@ -745,7 +745,7 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 	code := r.PostFormValue("code")
 	redirectURI := r.PostFormValue("redirect_uri")
 
-	if !s.isAuthRequestIDValid(code) {
+	if !s.validateBase32EncodedId(code) {
 		s.logger.Errorf("Invalid auth code")
 		s.renderError(r, w, http.StatusBadRequest, "Invalid auth code passed")
 		return
@@ -802,7 +802,7 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 }
 
 func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCode, client storage.Client) (*accessTokenReponse, error) {
-	if !s.isAuthRequestIDValid(authCode.ID) {
+	if !s.validateBase32EncodedId(authCode.ID) {
 		s.logger.Errorf("Invalid auth code")
 		s.tokenErrHelper(w, errInvalidRequest, "Invalid auth code passed", http.StatusBadRequest)
 		return nil, fmt.Errorf("invalid auth code")
@@ -1448,8 +1448,9 @@ func (s *Server) tokenErrHelper(w http.ResponseWriter, typ string, description s
 }
 
 // Validate Auth Request ID
-func (s *Server) isAuthRequestIDValid(id string) bool {
+func (s *Server) validateBase32EncodedId(id string) bool {
 	// Request ID is a 32 bit encoded string
+	// Check https://github.com/chef/dex-1/blob/master/storage/storage.go#L41 for details
 	re := regexp.MustCompile(`(?i)^[a-z0-7]+$`)
 	return re.Match([]byte(id))
 }
