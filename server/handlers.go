@@ -306,9 +306,13 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 
+		//check if username is blacklisted
+		fmt.Println(username, password, "username,password")
+
 		identity, ok, err := passwordConnector.Login(r.Context(), scopes, username, password)
 		if err != nil {
 			s.logger.Errorf("Failed to login user: %v", err)
+			fmt.Println("Failed to login user:", err)
 			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 			return
 		}
