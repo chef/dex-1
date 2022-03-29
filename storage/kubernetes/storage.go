@@ -21,6 +21,7 @@ const (
 	kindRefreshToken    = "RefreshToken"
 	kindKeys            = "SigningKey"
 	kindPassword        = "Password"
+	kindBlockedUser     = "BlockedUser"
 	kindOfflineSessions = "OfflineSessions"
 	kindConnector       = "Connector"
 	kindDeviceRequest   = "DeviceRequest"
@@ -34,6 +35,7 @@ const (
 	resourceRefreshToken    = "refreshtokens"
 	resourceKeys            = "signingkeies" // Kubernetes attempts to pluralize.
 	resourcePassword        = "passwords"
+	resourceBlockedUser     = "blockedusers"
 	resourceOfflineSessions = "offlinesessionses" // Again attempts to pluralize.
 	resourceConnector       = "connectors"
 	resourceDeviceRequest   = "devicerequests"
@@ -237,6 +239,10 @@ func (cli *client) CreatePassword(p storage.Password) error {
 	return cli.post(resourcePassword, cli.fromStoragePassword(p))
 }
 
+func (cli *client) CreateBlockedUser(u storage.BlockedUser) error {
+	return cli.post(resourceBlockedUser, cli.fromStorageBlockedUser(u))
+}
+
 func (cli *client) CreateRefresh(r storage.RefreshToken) error {
 	return cli.post(resourceRefreshToken, cli.fromStorageRefreshToken(r))
 }
@@ -293,6 +299,14 @@ func (cli *client) GetPassword(email string) (storage.Password, error) {
 	return toStoragePassword(p), nil
 }
 
+func (cli *client) GetBlockedUser(username string) (storage.BlockedUser, error) {
+	u, err := cli.getBlockedUser(username)
+	if err != nil {
+		return storage.BlockedUser{}, err
+	}
+	return toStorageBlockedUser(u), nil
+}
+
 func (cli *client) getPassword(email string) (Password, error) {
 	// TODO(ericchiang): Figure out whose job it is to lowercase emails.
 	email = strings.ToLower(email)
@@ -305,6 +319,20 @@ func (cli *client) getPassword(email string) (Password, error) {
 		return Password{}, fmt.Errorf("get email: email %q mapped to password with email %q", email, p.Email)
 	}
 	return p, nil
+}
+
+func (cli *client) getBlockedUser(username string) (BlockedUser, error) {
+	// TODO(ericchiang): Figure out whose job it is to lowercase emails.
+	username = strings.ToLower(username)
+	var u BlockedUser
+	name := cli.idToName(username)
+	if err := cli.get(resourceBlockedUser, name, &u); err != nil {
+		return BlockedUser{}, err
+	}
+	if username != u.Username {
+		return BlockedUser{}, fmt.Errorf("get blockedUser: username %q mapped to blockedUser with username %q", username, u.Username)
+	}
+	return u, nil
 }
 
 func (cli *client) GetKeys() (storage.Keys, error) {
@@ -426,6 +454,15 @@ func (cli *client) DeletePassword(email string) error {
 	return cli.delete(resourcePassword, p.ObjectMeta.Name)
 }
 
+func (cli *client) DeleteBlockedUser(username string) error {
+	// Check for hash collision.
+	u, err := cli.getBlockedUser(username)
+	if err != nil {
+		return err
+	}
+	return cli.delete(resourceBlockedUser, u.ObjectMeta.Name)
+}
+
 func (cli *client) DeleteOfflineSessions(userID string, connID string) error {
 	// Check for hash collision.
 	o, err := cli.getOfflineSessions(userID, connID)
@@ -489,6 +526,24 @@ func (cli *client) UpdatePassword(email string, updater func(old storage.Passwor
 	newPassword := cli.fromStoragePassword(updated)
 	newPassword.ObjectMeta = p.ObjectMeta
 	return cli.put(resourcePassword, p.ObjectMeta.Name, newPassword)
+}
+
+func (cli *client) UpdateBlockedUser(username string, updater func(old storage.BlockedUser) (storage.BlockedUser, error)) error {
+	u, err := cli.getBlockedUser(username)
+	if err != nil {
+		return err
+	}
+
+	updated, err := updater(toStorageBlockedUser(u))
+	if err != nil {
+		return err
+	}
+	updated.InvalidAttemptsCount = u.InvalidAttemptsCount
+	updated.UpdatedAt = u.UpdatedAt
+
+	newBlockedUser := cli.fromStorageBlockedUser(updated)
+	newBlockedUser.ObjectMeta = u.ObjectMeta
+	return cli.put(resourceBlockedUser, u.ObjectMeta.Name, newBlockedUser)
 }
 
 func (cli *client) UpdateOfflineSessions(userID string, connID string, updater func(old storage.OfflineSessions) (storage.OfflineSessions, error)) error {
