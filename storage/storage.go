@@ -55,6 +55,13 @@ type GCResult struct {
 	DeviceTokens   int64
 }
 
+type BlockedUser struct {
+	Username             string
+	InvalidAttemptsCount int64
+	UpdatedAt            time.Time
+	CreatedAt            time.Time
+}
+
 // Storage is the storage interface used by the server. Implementations are
 // required to be able to perform atomic compare-and-swap updates and either
 // support timezones or standardize on UTC.
@@ -67,6 +74,7 @@ type Storage interface {
 	CreateAuthCode(c AuthCode) error
 	CreateRefresh(r RefreshToken) error
 	CreatePassword(p Password) error
+	CreateBlockedUser(username string) error
 	CreateOfflineSessions(s OfflineSessions) error
 	CreateConnector(c Connector) error
 	CreateDeviceRequest(d DeviceRequest) error
@@ -84,6 +92,7 @@ type Storage interface {
 	GetConnector(id string) (Connector, error)
 	GetDeviceRequest(userCode string) (DeviceRequest, error)
 	GetDeviceToken(deviceCode string) (DeviceToken, error)
+	GetBlockedUser(username string) (BlockedUser, error)
 
 	ListClients() ([]Client, error)
 	ListRefreshTokens() ([]RefreshToken, error)
@@ -96,6 +105,7 @@ type Storage interface {
 	DeleteClient(id string) error
 	DeleteRefresh(id string) error
 	DeletePassword(email string) error
+	DeleteBlockedUser(username string) error
 	DeleteOfflineSessions(userID string, connID string) error
 	DeleteConnector(id string) error
 

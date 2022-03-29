@@ -393,12 +393,17 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		//check if username is blacklisted
-		fmt.Println(username, password, "username,password")
+		user, err := s.storage.GetBlockedUser(username)
+		if err != nil {
+			s.logger.Errorf("Failed to login user: %v", err)
+			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+			return
+		}
+		fmt.Println(user, password, "user,password")
 
 		identity, ok, err := passwordConnector.Login(r.Context(), scopes, username, password)
 		if err != nil {
 			s.logger.Errorf("Failed to login user: %v", err)
-			fmt.Println("Failed to login user:", err)
 			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 			return
 		}
@@ -406,6 +411,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
+			fmt.Println("Failed to login user:", err)
 			return
 		}
 		redirectURL, err := s.finalizeLogin(identity, authReq, conn.Connector)
