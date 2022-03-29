@@ -202,7 +202,7 @@ func (s staticBlockedUsersStorage) GetBlockedUser(username string) (BlockedUser,
 	return s.Storage.GetBlockedUser(username)
 }
 
-func (s staticBlockedUsersStorage) CreateBlockkedUser(u BlockedUser) error {
+func (s staticBlockedUsersStorage) CreateBlockedUser(u BlockedUser) error {
 	if s.isStatic(u.Username) {
 		return errors.New("static usernames: read-only cannot create blockedUsers")
 	}
