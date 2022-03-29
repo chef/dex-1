@@ -128,6 +128,7 @@ type Storage interface {
 	UpdateAuthRequest(id string, updater func(a AuthRequest) (AuthRequest, error)) error
 	UpdateRefreshToken(id string, updater func(r RefreshToken) (RefreshToken, error)) error
 	UpdatePassword(email string, updater func(p Password) (Password, error)) error
+	UpdateBlockedUser(username string, updater func(u BlockedUser) (BlockedUser, error)) error
 	UpdateOfflineSessions(userID string, connID string, updater func(s OfflineSessions) (OfflineSessions, error)) error
 	UpdateConnector(id string, updater func(c Connector) (Connector, error)) error
 	UpdateDeviceToken(deviceCode string, updater func(t DeviceToken) (DeviceToken, error)) error

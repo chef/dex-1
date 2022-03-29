@@ -161,6 +161,68 @@ func (s staticPasswordsStorage) UpdatePassword(email string, updater func(old Pa
 	return s.Storage.UpdatePassword(email, updater)
 }
 
+type staticBlockedUsersStorage struct {
+	Storage
+
+	// A read-only set of blockedUsers.
+	blockedUsers []BlockedUser
+	// A map of blockedUsers that is indexed by lower-case usernames
+	blockedUsersByUsername map[string]BlockedUser
+
+	logger log.Logger
+}
+
+// WithStaticBlockedUsers returns a storage with a read-only set of blockedUsers.
+func WithStaticBlockedUsers(s Storage, staticblockedUsers []BlockedUser, logger log.Logger) Storage {
+	blockedUsersByUsername := make(map[string]BlockedUser, len(staticblockedUsers))
+	for _, u := range staticblockedUsers {
+		// Enable case insensitive username comparison.
+		lowerUsername := strings.ToLower(u.Username)
+		if _, ok := blockedUsersByUsername[lowerUsername]; ok {
+			logger.Errorf("Attempting to create StaticblockedUsers with the same username: %s", u.Username)
+		}
+		blockedUsersByUsername[lowerUsername] = u
+	}
+
+	return staticBlockedUsersStorage{s, staticblockedUsers, blockedUsersByUsername, logger}
+}
+
+func (s staticBlockedUsersStorage) isStatic(username string) bool {
+	_, ok := s.blockedUsersByUsername[strings.ToLower(username)]
+	return ok
+}
+
+func (s staticBlockedUsersStorage) GetBlockedUser(username string) (BlockedUser, error) {
+	// TODO(ericchiang): BLAH. We really need to figure out how to handle
+	// lower cased username better.
+	username = strings.ToLower(username)
+	if username, ok := s.blockedUsersByUsername[username]; ok {
+		return username, nil
+	}
+	return s.Storage.GetBlockedUser(username)
+}
+
+func (s staticBlockedUsersStorage) CreateBlockkedUser(u BlockedUser) error {
+	if s.isStatic(u.Username) {
+		return errors.New("static usernames: read-only cannot create blockedUsers")
+	}
+	return s.Storage.CreateBlockedUser(u)
+}
+
+func (s staticBlockedUsersStorage) DeleteBlockedUser(username string) error {
+	if s.isStatic(username) {
+		return errors.New("static usernames: read-only cannot delete blockedUsers")
+	}
+	return s.Storage.DeleteBlockedUser(username)
+}
+
+func (s staticBlockedUsersStorage) UpdateBlockedUser(username string, updater func(old BlockedUser) (BlockedUser, error)) error {
+	if s.isStatic(username) {
+		return errors.New("static usernames: read-only cannot update blockedUsers")
+	}
+	return s.Storage.UpdateBlockedUser(username, updater)
+}
+
 // staticConnectorsStorage represents a storage with read-only set of connectors.
 type staticConnectorsStorage struct {
 	Storage
