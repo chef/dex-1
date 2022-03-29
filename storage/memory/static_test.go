@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -193,6 +194,106 @@ func TestStaticPasswords(t *testing.T) {
 				}
 				if n := len(passwords); n != 3 {
 					return fmt.Errorf("expected 3 passwords got %d", n)
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		err := tc.action()
+		if err != nil && !tc.wantErr {
+			t.Errorf("%s: %v", tc.name, err)
+		}
+		if err == nil && tc.wantErr {
+			t.Errorf("%s: expected error, didn't get one", tc.name)
+		}
+	}
+}
+
+func TestStaticBlockedUsers(t *testing.T) {
+	logger := &logrus.Logger{
+		Out:       os.Stderr,
+		Formatter: &logrus.TextFormatter{DisableColors: true},
+		Level:     logrus.DebugLevel,
+	}
+	backing := New(logger)
+
+	u1 := storage.BlockedUser{Username: "foo_secret", InvalidAttemptsCount: 0}
+	u2 := storage.BlockedUser{Username: "bar_secret", InvalidAttemptsCount: 4}
+	u3 := storage.BlockedUser{Username: "spam_secret", InvalidAttemptsCount: 2}
+	u4 := storage.BlockedUser{Username: "Spam_secret", InvalidAttemptsCount: 5}
+
+	backing.CreateBlockedUser(u1)
+	s := storage.WithStaticBlockedUsers(backing, []storage.BlockedUser{u2}, logger)
+
+	tests := []struct {
+		name    string
+		action  func() error
+		wantErr bool
+	}{
+		{
+			name: "get blockedUser from static storage",
+			action: func() error {
+				_, err := s.GetBlockedUser(u2.Username)
+				return err
+			},
+		},
+		{
+			name: "get blockedUser from backing storage",
+			action: func() error {
+				_, err := s.GetBlockedUser(u1.Username)
+				return err
+			},
+		},
+		{
+			name: "get blockedUser from static storage with casing",
+			action: func() error {
+				_, err := s.GetBlockedUser(strings.ToUpper(u2.Username))
+				return err
+			},
+		},
+		{
+			name: "update static blockedUser",
+			action: func() error {
+				updater := func(u storage.BlockedUser) (storage.BlockedUser, error) {
+					u.Username = "new_" + u.Username
+					return u, nil
+				}
+				return s.UpdateBlockedUser(u2.Username, updater)
+			},
+			wantErr: true,
+		},
+		{
+			name: "update non-static blockedUser",
+			action: func() error {
+				updater := func(u storage.BlockedUser) (storage.BlockedUser, error) {
+					u.InvalidAttemptsCount = u.InvalidAttemptsCount + 1
+					u.UpdatedAt = time.Now()
+					return u, nil
+				}
+				return s.UpdateBlockedUser(u1.Username, updater)
+			},
+		},
+		{
+			name: "create blockedUser",
+			action: func() error {
+				if err := s.CreateBlockedUser(u4); err != nil {
+					return err
+				}
+				return s.CreateBlockedUser(u3)
+			},
+			wantErr: true,
+		},
+		{
+			name: "get blockedUser",
+			action: func() error {
+				u, err := s.GetBlockedUser(u4.Username)
+				if err != nil {
+					return err
+				}
+				if strings.Compare(u.Username, u4.Username) != 0 {
+					return fmt.Errorf("expected %s blockedUser got %s", u4.Username, u.Username)
 				}
 				return nil
 			},

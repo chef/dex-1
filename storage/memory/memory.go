@@ -18,6 +18,7 @@ func New(logger log.Logger) storage.Storage {
 		refreshTokens:   make(map[string]storage.RefreshToken),
 		authReqs:        make(map[string]storage.AuthRequest),
 		passwords:       make(map[string]storage.Password),
+		blockedUsers:    make(map[string]storage.BlockedUser),
 		offlineSessions: make(map[offlineSessionID]storage.OfflineSessions),
 		connectors:      make(map[string]storage.Connector),
 		deviceRequests:  make(map[string]storage.DeviceRequest),
@@ -46,6 +47,7 @@ type memStorage struct {
 	refreshTokens   map[string]storage.RefreshToken
 	authReqs        map[string]storage.AuthRequest
 	passwords       map[string]storage.Password
+	blockedUsers    map[string]storage.BlockedUser
 	offlineSessions map[offlineSessionID]storage.OfflineSessions
 	connectors      map[string]storage.Connector
 	deviceRequests  map[string]storage.DeviceRequest
@@ -155,6 +157,18 @@ func (s *memStorage) CreatePassword(p storage.Password) (err error) {
 	return
 }
 
+func (s *memStorage) CreateBlockedUser(u storage.BlockedUser) (err error) {
+	lowerUsername := strings.ToLower(u.Username)
+	s.tx(func() {
+		if _, ok := s.blockedUsers[lowerUsername]; ok {
+			err = storage.ErrAlreadyExists
+		} else {
+			s.blockedUsers[lowerUsername] = u
+		}
+	})
+	return
+}
+
 func (s *memStorage) CreateOfflineSessions(o storage.OfflineSessions) (err error) {
 	id := offlineSessionID{
 		userID: o.UserID,
@@ -197,6 +211,17 @@ func (s *memStorage) GetPassword(email string) (p storage.Password, err error) {
 	s.tx(func() {
 		var ok bool
 		if p, ok = s.passwords[email]; !ok {
+			err = storage.ErrNotFound
+		}
+	})
+	return
+}
+
+func (s *memStorage) GetBlockedUser(username string) (u storage.BlockedUser, err error) {
+	username = strings.ToLower(username)
+	s.tx(func() {
+		var ok bool
+		if u, ok = s.blockedUsers[username]; !ok {
 			err = storage.ErrNotFound
 		}
 	})
@@ -309,6 +334,18 @@ func (s *memStorage) DeletePassword(email string) (err error) {
 			return
 		}
 		delete(s.passwords, email)
+	})
+	return
+}
+
+func (s *memStorage) DeleteBlockedUser(username string) (err error) {
+	username = strings.ToLower(username)
+	s.tx(func() {
+		if _, ok := s.blockedUsers[username]; !ok {
+			err = storage.ErrNotFound
+			return
+		}
+		delete(s.blockedUsers, username)
 	})
 	return
 }
@@ -431,6 +468,21 @@ func (s *memStorage) UpdatePassword(email string, updater func(p storage.Passwor
 		}
 		if req, err = updater(req); err == nil {
 			s.passwords[email] = req
+		}
+	})
+	return
+}
+
+func (s *memStorage) UpdateBlockedUser(username string, updater func(p storage.BlockedUser) (storage.BlockedUser, error)) (err error) {
+	username = strings.ToLower(username)
+	s.tx(func() {
+		req, ok := s.blockedUsers[username]
+		if !ok {
+			err = storage.ErrNotFound
+			return
+		}
+		if req, err = updater(req); err == nil {
+			s.blockedUsers[username] = req
 		}
 	})
 	return
