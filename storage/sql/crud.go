@@ -518,6 +518,32 @@ func (c *conn) UpdateClient(id string, updater func(old storage.Client) (storage
 	})
 }
 
+func (c *conn) UpdateBlockedUser(username string, updater func(old storage.BlockedUser) (storage.BlockedUser, error)) error {
+	return c.ExecTx(func(tx *trans) error {
+		u, err := getBlockedUser(tx, username)
+		if err != nil {
+			return err
+		}
+		nu, err := updater(u)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(`
+			update blocked_user
+			set
+				invalid_attempts_count = $1
+				updated_at = $2
+			where username = $3;
+		`, nu.InvalidAttemptsCount, nu.UpdatedAt, username,
+		)
+		if err != nil {
+			return fmt.Errorf("update blocked_user: %v", err)
+		}
+		return nil
+	})
+}
+
 func (c *conn) CreateClient(cli storage.Client) error {
 	_, err := c.Exec(`
 		insert into client (
@@ -533,6 +559,24 @@ func (c *conn) CreateClient(cli storage.Client) error {
 			return storage.ErrAlreadyExists
 		}
 		return fmt.Errorf("insert client: %v", err)
+	}
+	return nil
+}
+
+func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
+	_, err := c.Exec(`
+		insert into blocked_user (
+			username, invalid_attempts_count, created_at, updated_at
+		)
+		values ($1, $2, $3, $4);
+	`,
+		strings.ToLower(u.Username), u.InvalidAttemptsCount, u.CreatedAt, u.UpdatedAt,
+	)
+	if err != nil {
+		if c.alreadyExistsCheck(err) {
+			return storage.ErrAlreadyExists
+		}
+		return fmt.Errorf("insert into blocked_user: %v", err)
 	}
 	return nil
 }
@@ -639,6 +683,18 @@ func (c *conn) GetPassword(email string) (storage.Password, error) {
 	return getPassword(c, email)
 }
 
+func (c *conn) GetBlockedUser(username string) (storage.BlockedUser, error) {
+	return getBlockedUser(c, username)
+}
+
+func getBlockedUser(q querier, username string) (u storage.BlockedUser, err error) {
+	return scanBlockedUser(q.QueryRow(`
+	select
+		username, invalid_attempts_count, created_at, updated_at
+	from blocked_user where username = $1;
+	`, strings.ToLower(username)))
+}
+
 func getPassword(q querier, email string) (p storage.Password, err error) {
 	return scanPassword(q.QueryRow(`
 		select
@@ -683,6 +739,19 @@ func scanPassword(s scanner) (p storage.Password, err error) {
 		return p, fmt.Errorf("select password: %v", err)
 	}
 	return p, nil
+}
+
+func scanBlockedUser(s scanner) (u storage.BlockedUser, err error) {
+	err = s.Scan(
+		&u.Username, &u.InvalidAttemptsCount, &u.CreatedAt, &u.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return u, storage.ErrNotFound
+		}
+		return u, fmt.Errorf("select blockeduser: %v", err)
+	}
+	return u, nil
 }
 
 func (c *conn) CreateOfflineSessions(s storage.OfflineSessions) error {
@@ -865,6 +934,9 @@ func (c *conn) DeleteRefresh(id string) error     { return c.delete("refresh_tok
 func (c *conn) DeletePassword(email string) error {
 	return c.delete("password", "email", strings.ToLower(email))
 }
+func (c *conn) DeleteBlockedUser(username string) error {
+	return c.delete("blocked_user", "username", strings.ToLower(username))
+}
 func (c *conn) DeleteConnector(id string) error { return c.delete("connector", "id", id) }
 
 func (c *conn) DeleteOfflineSessions(userID string, connID string) error {
@@ -998,7 +1070,7 @@ func (c *conn) UpdateDeviceToken(deviceCode string, updater func(old storage.Dev
 		_, err = tx.Exec(`
 			update device_token
 			set
-				status = $1, 
+				status = $1,
 				token = $2,
 				last_request = $3,
 				poll_interval = $4
