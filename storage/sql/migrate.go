@@ -284,5 +284,6 @@ var migrations = []migration{
 				add column updated_at timestamptz not null
 			);`,
 		},
+		flavor: &flavorPostgres,
 	},
 }
