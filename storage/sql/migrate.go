@@ -160,13 +160,6 @@ var migrations = []migration{
 				user_id text not null
 			);`,
 			`
-			create table blocked_user (
-				username text not null primary key,
-				invalid_attempts_count integer not null,
-				add column created_at timestamptz not null,
-				add column updated_at timestamptz not null
-			);`,
-			`
 			-- keys is a weird table because we only ever expect there to be a single row
 			create table keys (
 				id text not null primary key,
@@ -279,6 +272,17 @@ var migrations = []migration{
 			`
 			alter table auth_code
 				add column code_challenge_method text not null default '';`,
+		},
+	},
+	{
+		stmts: []string{
+			`
+			create table blocked_user (
+				username text not null primary key,
+				invalid_attempts_count integer not null,
+				add column created_at timestamptz not null,
+				add column updated_at timestamptz not null
+			);`,
 		},
 	},
 }
