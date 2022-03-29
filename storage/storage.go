@@ -82,7 +82,7 @@ type Storage interface {
 	CreateAuthCode(c AuthCode) error
 	CreateRefresh(r RefreshToken) error
 	CreatePassword(p Password) error
-	CreateBlockedUser(username string) error
+	CreateBlockedUser(u BlockedUser) error
 	CreateOfflineSessions(s OfflineSessions) error
 	CreateConnector(c Connector) error
 	CreateDeviceRequest(d DeviceRequest) error
