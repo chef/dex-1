@@ -378,6 +378,22 @@ type Password struct {
 	UserID   string `json:"userID,omitempty"`
 }
 
+// BlockedUser is a mirrored struct from the stroage with JSON struct tags and
+// Kubernetes type metadata.
+type BlockedUser struct {
+	k8sapi.TypeMeta   `json:",inline"`
+	k8sapi.ObjectMeta `json:"metadata,omitempty"`
+
+	// The Kubernetes name is actually an encoded version of this value.
+	//
+	// This field is IMMUTABLE. Do not change.
+	Username string `json:"username,omitempty"`
+
+	InvalidAttemptsCount int64     `json:"invalid_attempts_count,omitempty"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
+}
+
 // PasswordList is a list of Passwords.
 type PasswordList struct {
 	k8sapi.TypeMeta `json:",inline"`
@@ -409,6 +425,33 @@ func toStoragePassword(p Password) storage.Password {
 		Hash:     p.Hash,
 		Username: p.Username,
 		UserID:   p.UserID,
+	}
+}
+
+func (cli *client) fromStorageBlockedUser(u storage.BlockedUser) BlockedUser {
+	username := strings.ToLower(u.Username)
+	return BlockedUser{
+		TypeMeta: k8sapi.TypeMeta{
+			Kind:       kindBlockedUser,
+			APIVersion: cli.apiVersion,
+		},
+		ObjectMeta: k8sapi.ObjectMeta{
+			Name:      cli.idToName(username),
+			Namespace: cli.namespace,
+		},
+		Username:             username,
+		InvalidAttemptsCount: u.InvalidAttemptsCount,
+		CreatedAt:            u.CreatedAt,
+		UpdatedAt:            u.UpdatedAt,
+	}
+}
+
+func toStorageBlockedUser(u BlockedUser) storage.BlockedUser {
+	return storage.BlockedUser{
+		Username:             u.Username,
+		InvalidAttemptsCount: u.InvalidAttemptsCount,
+		CreatedAt:            u.CreatedAt,
+		UpdatedAt:            u.UpdatedAt,
 	}
 }
 
