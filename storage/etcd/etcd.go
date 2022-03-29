@@ -19,6 +19,7 @@ const (
 	refreshTokenPrefix   = "refresh_token/"
 	authRequestPrefix    = "auth_req/"
 	passwordPrefix       = "password/"
+	blockedUserPrefix    = "blocked_user/"
 	offlineSessionPrefix = "offline_session/"
 	connectorPrefix      = "connector/"
 	keysName             = "openid-connect-keys"
@@ -287,11 +288,24 @@ func (c *conn) CreatePassword(p storage.Password) error {
 	return c.txnCreate(ctx, passwordPrefix+strings.ToLower(p.Email), p)
 }
 
+func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.txnCreate(ctx, blockedUserPrefix+strings.ToLower(u.Username), u)
+}
+
 func (c *conn) GetPassword(email string) (p storage.Password, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
 	err = c.getKey(ctx, keyEmail(passwordPrefix, email), &p)
 	return p, err
+}
+
+func (c *conn) GetBlockedUser(username string) (u storage.BlockedUser, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	err = c.getKey(ctx, keyUsername(blockedUserPrefix, username), &u)
+	return u, err
 }
 
 func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (storage.Password, error)) error {
@@ -312,10 +326,34 @@ func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (st
 	})
 }
 
+func (c *conn) UpdateBlockedUser(username string, updater func(p storage.BlockedUser) (storage.BlockedUser, error)) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.txnUpdate(ctx, keyEmail(blockedUserPrefix, username), func(currentValue []byte) ([]byte, error) {
+		var current storage.BlockedUser
+		if len(currentValue) > 0 {
+			if err := json.Unmarshal(currentValue, &current); err != nil {
+				return nil, err
+			}
+		}
+		updated, err := updater(current)
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(updated)
+	})
+}
+
 func (c *conn) DeletePassword(email string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
 	return c.deleteKey(ctx, keyEmail(passwordPrefix, email))
+}
+
+func (c *conn) DeleteBlockedUser(username string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.deleteKey(ctx, keyEmail(blockedUserPrefix, username))
 }
 
 func (c *conn) ListPasswords() (passwords []storage.Password, err error) {
@@ -562,10 +600,11 @@ func (c *conn) txnUpdate(ctx context.Context, key string, update func(current []
 	return nil
 }
 
-func keyID(prefix, id string) string       { return prefix + id }
-func keyEmail(prefix, email string) string { return prefix + strings.ToLower(email) }
-func keySession(userID, connID string) string {
-	return offlineSessionPrefix + strings.ToLower(userID+"|"+connID)
+func keyID(prefix, id string) string             { return prefix + id }
+func keyEmail(prefix, email string) string       { return prefix + strings.ToLower(email) }
+func keyUsername(prefix, username string) string { return prefix + strings.ToLower(username) }
+func keySession(prefix, userID, connID string) string {
+	return prefix + strings.ToLower(userID+"|"+connID)
 }
 
 func (c *conn) CreateDeviceRequest(d storage.DeviceRequest) error {
