@@ -351,7 +351,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			}
 			http.Redirect(w, r, callbackURL, http.StatusFound)
 		case connector.PasswordConnector:
-			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink); err != nil {
+			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink, 0); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
 		case connector.SAMLConnector:
@@ -426,9 +426,10 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 				if blockedUser.InvalidAttemptsCount > 5 {
-					fmt.Println(blockedUser, "user is blocked")
 					s.logger.Errorf("User is blocked: %v", err)
-					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
+						s.logger.Errorf("Server template error: %v", err)
+					}
 					return
 				}
 
@@ -442,14 +443,19 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					s.logger.Errorf("Failed to increment invalid counter: %v", err)
 					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 				}
+
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1); err != nil {
+					s.logger.Errorf("Server template error: %v", err)
+				}
+				return
 			}
-			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink); err != nil {
+
+			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 0); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
-			fmt.Println(err, "template,err")
-			fmt.Println("Failed to login user:", err)
 			return
 		}
+
 		redirectURL, err := s.finalizeLogin(identity, authReq, conn.Connector)
 		if err != nil {
 			s.logger.Errorf("Failed to finalize login: %v", err)

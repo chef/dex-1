@@ -284,16 +284,16 @@ func (t *templates) login(r *http.Request, w http.ResponseWriter, connectors []c
 	return renderTemplate(w, t.loginTmpl, data)
 }
 
-func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool) error {
+func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, invalidAttemptsCount int) error {
 	data := struct {
-		PostURL        string
-		BackLink       bool
-		Username       string
-		UsernamePrompt string
-		Invalid        bool
-		ReqPath        string
-	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path}
-	fmt.Println(data, "template data")
+		PostURL              string
+		BackLink             bool
+		Username             string
+		UsernamePrompt       string
+		Invalid              bool
+		ReqPath              string
+		InvalidAttemptsCount int
+	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, invalidAttemptsCount}
 	return renderTemplate(w, t.passwordTmpl, data)
 }
 
