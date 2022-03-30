@@ -67,7 +67,6 @@ type BlockedUser struct {
 	Username             string
 	InvalidAttemptsCount int64
 	UpdatedAt            time.Time
-	CreatedAt            time.Time
 }
 
 // Storage is the storage interface used by the server. Implementations are

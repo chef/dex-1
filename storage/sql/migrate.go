@@ -279,9 +279,8 @@ var migrations = []migration{
 			`
 			create table if not exists blocked_user (
 				username text not null primary key,
-				invalid_attempts_count integer not null,
-				created_at timestamptz not null,
-				updated_at timestamptz not null
+				invalid_attempts_count integer not null default 1,
+				updated_at timestamptz not null default '0001-01-01 00:00:00 UTC';
 			);`,
 		},
 		flavor: &flavorPostgres,

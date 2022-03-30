@@ -306,23 +306,30 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 
-		//check if username is blacklisted
-		// user, err := s.storage.GetBlockedUser(username)
-		// if err != nil {
-		// 	s.logger.Errorf("Failed to login user: %v", err)
-		// 	s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
-		// 	return
-		// }
-		// fmt.Println(user, password, "user,password")
-
 		identity, ok, err := passwordConnector.Login(r.Context(), scopes, username, password)
 		if err != nil {
-			fmt.Println(username, password, "user,password")
+			// fmt.Println(username, password, "user,password")
 			s.logger.Errorf("Failed to login user: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 			return
 		}
 		if !ok {
+			//check if username is blacklisted
+			err := s.storage.CreateBlockedUser(storage.BlockedUser{
+				Username:             username,
+				InvalidAttemptsCount: 1,
+				UpdatedAt:            time.Now(),
+			})
+			if err == storage.ErrAlreadyExists {
+				blockedUser, err := s.storage.GetBlockedUser(username)
+				if err != nil {
+					err.Error()
+					s.logger.Errorf("Failed to login user: %v", err)
+					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+					return
+				}
+				fmt.Println(blockedUser, "blockedUserA")
+			}
 			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
