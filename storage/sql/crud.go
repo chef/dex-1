@@ -564,11 +564,11 @@ func (c *conn) CreateClient(cli storage.Client) error {
 func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
 	_, err := c.Exec(`
 		insert into blocked_user (
-			username, invalid_attempts_count, created_at, updated_at
+			username, invalid_attempts_count, updated_at
 		)
-		values ($1, $2, $3, $4);
+		values ($1, $2, $3);
 	`,
-		strings.ToLower(u.Username), u.InvalidAttemptsCount, u.CreatedAt, u.UpdatedAt,
+		strings.ToLower(u.Username), u.InvalidAttemptsCount, u.UpdatedAt,
 	)
 	if err != nil {
 		if c.alreadyExistsCheck(err) {
@@ -686,7 +686,7 @@ func (c *conn) GetBlockedUser(username string) (storage.BlockedUser, error) {
 func getBlockedUser(q querier, username string) (u storage.BlockedUser, err error) {
 	return scanBlockedUser(q.QueryRow(`
 	select
-		username, invalid_attempts_count, created_at, updated_at
+		username, invalid_attempts_count, updated_at
 	from blocked_user where username = $1;
 	`, strings.ToLower(username)))
 }
@@ -738,7 +738,7 @@ func scanPassword(s scanner) (p storage.Password, err error) {
 
 func scanBlockedUser(s scanner) (u storage.BlockedUser, err error) {
 	err = s.Scan(
-		&u.Username, &u.InvalidAttemptsCount, &u.CreatedAt, &u.UpdatedAt,
+		&u.Username, &u.InvalidAttemptsCount, &u.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

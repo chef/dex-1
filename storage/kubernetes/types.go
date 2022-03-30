@@ -441,7 +441,6 @@ func (cli *client) fromStorageBlockedUser(u storage.BlockedUser) BlockedUser {
 		},
 		Username:             username,
 		InvalidAttemptsCount: u.InvalidAttemptsCount,
-		CreatedAt:            u.CreatedAt,
 		UpdatedAt:            u.UpdatedAt,
 	}
 }
@@ -450,7 +449,6 @@ func toStorageBlockedUser(u BlockedUser) storage.BlockedUser {
 	return storage.BlockedUser{
 		Username:             u.Username,
 		InvalidAttemptsCount: u.InvalidAttemptsCount,
-		CreatedAt:            u.CreatedAt,
 		UpdatedAt:            u.UpdatedAt,
 	}
 }
