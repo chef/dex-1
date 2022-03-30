@@ -444,7 +444,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 				}
 
-				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1); err != nil {
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 					s.logger.Errorf("Server template error: %v", err)
 				}
 				return
