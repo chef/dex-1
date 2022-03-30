@@ -532,7 +532,7 @@ func (c *conn) UpdateBlockedUser(username string, updater func(old storage.Block
 		_, err = tx.Exec(`
 			update blocked_user
 			set
-				invalid_attempts_count = $1
+				invalid_attempts_count = $1,
 				updated_at = $2
 			where username = $3;
 		`, nu.InvalidAttemptsCount, nu.UpdatedAt, username,
