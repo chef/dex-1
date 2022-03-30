@@ -297,6 +297,7 @@ func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, la
 		Invalid        bool
 		ReqPath        string
 	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path}
+	fmt.Println(data, "template data")
 	return renderTemplate(w, t.passwordTmpl, data)
 }
 
