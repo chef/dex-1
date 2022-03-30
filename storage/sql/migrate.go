@@ -280,8 +280,8 @@ var migrations = []migration{
 			create table if not exists blocked_user (
 				username text not null primary key,
 				invalid_attempts_count integer not null,
-				add column created_at timestamptz not null,
-				add column updated_at timestamptz not null
+				created_at timestamptz not null,
+				updated_at timestamptz not null
 			);`,
 		},
 		flavor: &flavorPostgres,
