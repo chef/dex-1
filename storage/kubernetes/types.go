@@ -389,7 +389,7 @@ type BlockedUser struct {
 	// This field is IMMUTABLE. Do not change.
 	Username string `json:"username,omitempty"`
 
-	InvalidAttemptsCount int64     `json:"invalid_attempts_count,omitempty"`
+	InvalidAttemptsCount int       `json:"invalid_attempts_count,omitempty"`
 	CreatedAt            time.Time `json:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at"`
 }
