@@ -316,7 +316,8 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 		diff := time.Since(blockedUser.UpdatedAt)
 		if diff.Minutes() <= 30 && blockedUser.InvalidAttemptsCount >= 5 {
-			s.logger.Errorf("User is blocked: %v", err)
+			s.logger.Errorf("User is blocked: %v", diff.Minutes())
+			fmt.Println(diff.Minutes(), blockedUser.InvalidAttemptsCount, "time,count")
 			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
@@ -357,7 +358,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 				if blockedUser.InvalidAttemptsCount >= 5 {
-					s.logger.Errorf("User is blocked: %v", err)
+					s.logger.Errorf("User is blocked: %v", blockedUser.InvalidAttemptsCount)
 					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 						s.logger.Errorf("Server template error: %v", err)
 					}
