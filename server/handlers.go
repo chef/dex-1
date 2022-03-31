@@ -345,6 +345,9 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 					return
 				}
+				isBlockedUserUpdated := false
+				// Since user has exceeded the specified blocked duration reset the
+				// counter and updated_at time
 				if diff := time.Since(blockedUser.UpdatedAt); diff.Minutes() > 30 {
 					updater := func(u storage.BlockedUser) (storage.BlockedUser, error) {
 						u.InvalidAttemptsCount = 1
@@ -356,6 +359,13 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 						s.logger.Errorf("Failed to reset invalid counter: %v", err)
 						s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 					}
+					isBlockedUserUpdated = true
+				}
+				if isBlockedUserUpdated {
+					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1); err != nil {
+						s.logger.Errorf("Server template error: %v", err)
+					}
+					return
 				}
 				if blockedUser.InvalidAttemptsCount >= 5 {
 					s.logger.Errorf("User is blocked: %v", blockedUser.InvalidAttemptsCount)
@@ -376,13 +386,13 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 				}
 
-				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1); err != nil {
 					s.logger.Errorf("Server template error: %v", err)
 				}
 				return
 			}
 
-			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 0); err != nil {
+			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
 			return
