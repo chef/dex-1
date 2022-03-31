@@ -311,12 +311,11 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			s.logger.Errorf("Failed to get blocked user: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Failed to get blocked user: %v", err))
-			fmt.Println(blockedUser, "blockedUsrA")
 			return
 		}
 
 		diff := time.Since(blockedUser.UpdatedAt)
-		if diff.Minutes() > 30 && blockedUser.InvalidAttemptsCount >= 5 {
+		if diff.Minutes() <= 30 && blockedUser.InvalidAttemptsCount >= 5 {
 			s.logger.Errorf("User is blocked: %v", err)
 			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 				s.logger.Errorf("Server template error: %v", err)

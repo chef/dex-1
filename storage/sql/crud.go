@@ -684,7 +684,11 @@ func (c *conn) GetPassword(email string) (storage.Password, error) {
 }
 
 func (c *conn) GetBlockedUser(username string) (storage.BlockedUser, error) {
-	return getBlockedUser(c, username)
+	u, err := getBlockedUser(c, username)
+	if err == storage.ErrNotFound {
+		return u, nil
+	}
+	return u, err
 }
 
 func getBlockedUser(q querier, username string) (u storage.BlockedUser, err error) {
