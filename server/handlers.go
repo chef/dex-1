@@ -326,7 +326,6 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 		identity, ok, err := passwordConnector.Login(r.Context(), scopes, username, password)
 		if err != nil {
-			// fmt.Println(username, password, "user,password")
 			s.logger.Errorf("Failed to login user: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
 			return
@@ -342,7 +341,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 				blockedUser, err := s.storage.GetBlockedUser(username)
 				if err != nil {
 					s.logger.Errorf("Failed to get blocked user: %v", err)
-					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Query error: %v", err))
 					return
 				}
 				isBlockedUserUpdated := false
@@ -357,7 +356,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 					if err := s.storage.UpdateBlockedUser(username, updater); err != nil {
 						s.logger.Errorf("Failed to reset invalid counter: %v", err)
-						s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+						s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
 					}
 					isBlockedUserUpdated = true
 				}
@@ -383,7 +382,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 				if err := s.storage.UpdateBlockedUser(username, updater); err != nil {
 					s.logger.Errorf("Failed to increment invalid counter: %v", err)
-					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
 				}
 
 				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1); err != nil {
@@ -402,6 +401,12 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			s.logger.Errorf("Failed to finalize login: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, "Login error.")
+			return
+		}
+
+		if err := s.storage.DeleteBlockedUser(username); err != nil {
+			s.logger.Errorf("Failed to delete blocked user: %v", err)
+			s.renderError(r, w, http.StatusInternalServerError, "db error.")
 			return
 		}
 
