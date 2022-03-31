@@ -490,7 +490,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := s.storage.DeleteBlockedUser(username); err != nil {
+		if err := s.storage.DeleteBlockedUser(username); err != nil && err != storage.ErrNotFound {
 			s.logger.Errorf("Failed to delete blocked user: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, "db error.")
 			return
