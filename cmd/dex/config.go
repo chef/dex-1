@@ -295,5 +295,5 @@ type Logger struct {
 type InvalidAttempts struct {
 	EnableInvalidAttempts bool  `json:"enableInvalidAttempts"`
 	BlockDuration         int32 `json:"blockDuration"`
-	MaxInvalidAttempts    int32 `json:"maxInvalidAttempts"`
+	MaxAttemptsAllowed    int32 `json:"maxAttemptsAllowed"`
 }
