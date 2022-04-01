@@ -291,3 +291,9 @@ type Logger struct {
 	// Format specifies the format to be used for logging.
 	Format string `json:"format"`
 }
+
+type InvalidAttempts struct {
+	EnableInvalidAttempts bool  `json:"enableInvalidAttempts"`
+	BlockDuration         int32 `json:"blockDuration"`
+	MaxInvalidAttempts    int32 `json:"maxInvalidAttempts"`
+}
