@@ -80,6 +80,10 @@ type Config struct {
 	IDTokensValidFor       time.Duration // Defaults to 24 hours
 	AuthRequestsValidFor   time.Duration // Defaults to 24 hours
 	DeviceRequestsValidFor time.Duration // Defaults to 5 minutes
+
+	EnableInvalidAttempts bool
+	BlockDuration         int32
+	MaxAttemptsAllowed    int32
 	// If set, the server will use this connector to handle password grants
 	PasswordConnector string
 

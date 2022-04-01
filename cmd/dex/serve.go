@@ -261,6 +261,14 @@ func serve(cmd *cobra.Command, args []string) error {
 		logger.Infof("config id tokens valid for: %v", idTokens)
 		serverConfig.IDTokensValidFor = idTokens
 	}
+
+	if c.InvalidAttempts.EnableInvalidAttempts {
+		serverConfig.EnableInvalidAttempts = c.InvalidAttempts.EnableInvalidAttempts
+		serverConfig.BlockDuration = c.InvalidAttempts.BlockDuration
+		serverConfig.MaxAttemptsAllowed = c.InvalidAttempts.MaxAttemptsAllowed
+	}
+
+	fmt.Println(serverConfig, "ServerConfig.")
 	if c.Expiry.AuthRequests != "" {
 		authRequests, err := time.ParseDuration(c.Expiry.AuthRequests)
 		if err != nil {
