@@ -57,7 +57,7 @@ type GCResult struct {
 
 type BlockedUser struct {
 	Username             string
-	InvalidAttemptsCount int
+	InvalidAttemptsCount int32
 	UpdatedAt            time.Time
 }
 
