@@ -166,6 +166,10 @@ type Server struct {
 	authRequestsValidFor   time.Duration
 	deviceRequestsValidFor time.Duration
 
+	enableInvalidAttempts bool
+	blockDuration         int32
+	maxAttemptsAllowed    int32
+
 	logger log.Logger
 }
 
@@ -240,6 +244,9 @@ func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy)
 		templates:              tmpls,
 		passwordConnector:      c.PasswordConnector,
 		logger:                 c.Logger,
+		enableInvalidAttempts:  c.EnableInvalidAttempts,
+		blockDuration:          c.BlockDuration,
+		maxAttemptsAllowed:     c.MaxAttemptsAllowed,
 	}
 
 	// Retrieves connector objects in backend storage. This list includes the static connectors

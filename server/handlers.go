@@ -306,6 +306,8 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 
+		fmt.Println(s.enableInvalidAttempts, s.maxAttemptsAllowed, s.blockDuration, "configA")
+
 		//Check if username is in blocked_user table
 		blockedUser, err := s.storage.GetBlockedUser(username)
 		if err != nil {
