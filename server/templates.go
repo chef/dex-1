@@ -293,7 +293,7 @@ func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, la
 		Invalid              bool
 		ReqPath              string
 		InvalidAttemptsCount int32
-		maxAttemptsAllowed   int32
+		MaxAttemptsAllowed   int32
 	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, invalidAttemptsCount, maxAttemptsAllowed}
 	return renderTemplate(w, t.passwordTmpl, data)
 }
