@@ -65,7 +65,7 @@ func (g *GCResult) IsEmpty() bool {
 
 type BlockedUser struct {
 	Username             string
-	InvalidAttemptsCount int
+	InvalidAttemptsCount int32
 	UpdatedAt            time.Time
 }
 

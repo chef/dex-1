@@ -317,7 +317,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		diff := time.Since(blockedUser.UpdatedAt)
-		if diff.Minutes() <= 30 && blockedUser.InvalidAttemptsCount >= 5 {
+		if diff.Minutes() <= float64(s.blockDuration) && blockedUser.InvalidAttemptsCount >= s.maxAttemptsAllowed {
 			s.logger.Errorf("User is blocked: %v", diff.Minutes())
 			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
@@ -348,7 +348,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 				isBlockedUserReset := false
 				// Since user has exceeded the specified blocked duration reset the
 				// counter and updated_at time
-				if diff := time.Since(blockedUser.UpdatedAt); diff.Minutes() > 30 {
+				if diff := time.Since(blockedUser.UpdatedAt); diff.Minutes() > float64(s.blockDuration) {
 					updater := func(u storage.BlockedUser) (storage.BlockedUser, error) {
 						u.InvalidAttemptsCount = 1
 						u.UpdatedAt = time.Now()
@@ -367,7 +367,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 					}
 					return
 				}
-				if blockedUser.InvalidAttemptsCount >= 5 {
+				if blockedUser.InvalidAttemptsCount >= s.maxAttemptsAllowed {
 					s.logger.Errorf("User is blocked: %v", blockedUser.InvalidAttemptsCount)
 					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount); err != nil {
 						s.logger.Errorf("Server template error: %v", err)
