@@ -281,6 +281,10 @@ func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy)
 	}
 
 	r := mux.NewRouter()
+
+	//Middleware Intercepter
+	r.Use(muxCustomMiddleware)
+
 	handle := func(p string, h http.Handler) {
 		r.Handle(path.Join(issuerURL.Path, p), instrumentHandlerCounter(p, h))
 	}
@@ -347,6 +351,15 @@ func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy)
 	s.startGarbageCollection(ctx, value(c.GCFrequency, 5*time.Minute), now)
 
 	return s, nil
+}
+
+//Add HSTS header to response
+//See: https://github.com/chef/automate/issues/5698
+func muxCustomMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
