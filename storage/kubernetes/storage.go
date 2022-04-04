@@ -322,7 +322,6 @@ func (cli *client) getPassword(email string) (Password, error) {
 }
 
 func (cli *client) getBlockedUser(username string) (BlockedUser, error) {
-	// TODO(ericchiang): Figure out whose job it is to lowercase emails.
 	username = strings.ToLower(username)
 	var u BlockedUser
 	name := cli.idToName(username)
