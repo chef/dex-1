@@ -268,7 +268,6 @@ func serve(cmd *cobra.Command, args []string) error {
 		serverConfig.MaxAttemptsAllowed = c.InvalidAttempts.MaxAttemptsAllowed
 	}
 
-	fmt.Println(serverConfig, "ServerConfig.")
 	if c.Expiry.AuthRequests != "" {
 		authRequests, err := time.ParseDuration(c.Expiry.AuthRequests)
 		if err != nil {

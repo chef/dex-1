@@ -439,9 +439,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 
-		fmt.Println(s.enableInvalidAttempts, s.maxAttemptsAllowed, s.blockDuration, "configA")
-
-		//Check if username is in blocked_user table
+		//check if username is in blocked_user table
 		blockedUser, err := s.storage.GetBlockedUser(username)
 		if err != nil {
 			s.logger.Errorf("Failed to get blocked user: %v", err)
@@ -464,52 +462,45 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !ok {
-			//check if username is blacklisted
-			err := s.storage.CreateBlockedUser(storage.BlockedUser{
-				Username:             username,
-				InvalidAttemptsCount: 1,
-				UpdatedAt:            time.Now(),
-			})
+			if blockedUser.Username != username {
+				//create blocked user
+				err := s.storage.CreateBlockedUser(storage.BlockedUser{
+					Username:             username,
+					InvalidAttemptsCount: 1,
+					UpdatedAt:            time.Now(),
+				})
 
-			if err != storage.ErrAlreadyExists && err != nil {
-				s.logger.Errorf("Failed to create blocked user: %v", err)
-				s.renderError(r, w, http.StatusInternalServerError, "db error.")
-				return
-			}
-
-			if err == storage.ErrAlreadyExists {
-				blockedUser, err := s.storage.GetBlockedUser(username)
 				if err != nil {
-					s.logger.Errorf("Failed to get blocked user: %v", err)
-					s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Query error: %v", err))
+					s.logger.Errorf("Failed to create blocked user: %v", err)
+					s.renderError(r, w, http.StatusInternalServerError, "db error.")
 					return
 				}
 
-				if s.isFailedAttemptDurationExceeded(blockedUser) {
-					s.resetFailedAttempt(username, w, r)
-					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
-						s.logger.Errorf("Server template error: %v", err)
-					}
-					return
-				}
-
-				if s.isAllowedFailedAttemptExceeded(blockedUser) {
-					s.logger.Errorf("User is blocked: %v", blockedUser.InvalidAttemptsCount)
-					if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount, s.maxAttemptsAllowed, s.blockDuration); err != nil {
-						s.logger.Errorf("Server template error: %v", err)
-					}
-					return
-				}
-
-				s.updateInvalidAttemptCount(username, w, r)
-
-				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
 					s.logger.Errorf("Server template error: %v", err)
 				}
 				return
 			}
 
-			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
+			if s.isFailedAttemptDurationExceeded(blockedUser) {
+				s.resetFailedAttempt(username, w, r)
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
+					s.logger.Errorf("Server template error: %v", err)
+				}
+				return
+			}
+
+			if s.isAllowedFailedAttemptExceeded(blockedUser) {
+				s.logger.Errorf("User is blocked: %v", blockedUser.InvalidAttemptsCount)
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount, s.maxAttemptsAllowed, s.blockDuration); err != nil {
+					s.logger.Errorf("Server template error: %v", err)
+				}
+				return
+			}
+
+			s.updateInvalidAttemptCount(username, w, r)
+
+			if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, blockedUser.InvalidAttemptsCount+1, s.maxAttemptsAllowed, s.blockDuration); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
 			return
