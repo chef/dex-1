@@ -13,17 +13,17 @@ import (
 // New returns an in memory storage.
 func New(logger log.Logger) storage.Storage {
 	return &memStorage{
-		clients:         make(map[string]storage.Client),
-		authCodes:       make(map[string]storage.AuthCode),
-		refreshTokens:   make(map[string]storage.RefreshToken),
-		authReqs:        make(map[string]storage.AuthRequest),
-		passwords:       make(map[string]storage.Password),
-		blockedUsers:    make(map[string]storage.BlockedUser),
-		offlineSessions: make(map[offlineSessionID]storage.OfflineSessions),
-		connectors:      make(map[string]storage.Connector),
-		deviceRequests:  make(map[string]storage.DeviceRequest),
-		deviceTokens:    make(map[string]storage.DeviceToken),
-		logger:          logger,
+		clients:             make(map[string]storage.Client),
+		authCodes:           make(map[string]storage.AuthCode),
+		refreshTokens:       make(map[string]storage.RefreshToken),
+		authReqs:            make(map[string]storage.AuthRequest),
+		passwords:           make(map[string]storage.Password),
+		InvalidLoginAttempt: make(map[string]storage.InvalidLoginAttempt),
+		offlineSessions:     make(map[offlineSessionID]storage.OfflineSessions),
+		connectors:          make(map[string]storage.Connector),
+		deviceRequests:      make(map[string]storage.DeviceRequest),
+		deviceTokens:        make(map[string]storage.DeviceToken),
+		logger:              logger,
 	}
 }
 
@@ -42,16 +42,16 @@ func (c *Config) Open(logger log.Logger) (storage.Storage, error) {
 type memStorage struct {
 	mu sync.Mutex
 
-	clients         map[string]storage.Client
-	authCodes       map[string]storage.AuthCode
-	refreshTokens   map[string]storage.RefreshToken
-	authReqs        map[string]storage.AuthRequest
-	passwords       map[string]storage.Password
-	blockedUsers    map[string]storage.BlockedUser
-	offlineSessions map[offlineSessionID]storage.OfflineSessions
-	connectors      map[string]storage.Connector
-	deviceRequests  map[string]storage.DeviceRequest
-	deviceTokens    map[string]storage.DeviceToken
+	clients             map[string]storage.Client
+	authCodes           map[string]storage.AuthCode
+	refreshTokens       map[string]storage.RefreshToken
+	authReqs            map[string]storage.AuthRequest
+	passwords           map[string]storage.Password
+	InvalidLoginAttempt map[string]storage.InvalidLoginAttempt
+	offlineSessions     map[offlineSessionID]storage.OfflineSessions
+	connectors          map[string]storage.Connector
+	deviceRequests      map[string]storage.DeviceRequest
+	deviceTokens        map[string]storage.DeviceToken
 
 	keys storage.Keys
 
@@ -157,13 +157,13 @@ func (s *memStorage) CreatePassword(p storage.Password) (err error) {
 	return
 }
 
-func (s *memStorage) CreateBlockedUser(u storage.BlockedUser) (err error) {
+func (s *memStorage) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) (err error) {
 	lowerUsername := strings.ToLower(u.Username)
 	s.tx(func() {
-		if _, ok := s.blockedUsers[lowerUsername]; ok {
+		if _, ok := s.InvalidLoginAttempt[lowerUsername]; ok {
 			err = storage.ErrAlreadyExists
 		} else {
-			s.blockedUsers[lowerUsername] = u
+			s.InvalidLoginAttempt[lowerUsername] = u
 		}
 	})
 	return
@@ -217,11 +217,11 @@ func (s *memStorage) GetPassword(email string) (p storage.Password, err error) {
 	return
 }
 
-func (s *memStorage) GetBlockedUser(username string) (u storage.BlockedUser, err error) {
+func (s *memStorage) GetInvalidLoginAttempt(username string) (u storage.InvalidLoginAttempt, err error) {
 	username = strings.ToLower(username)
 	s.tx(func() {
 		var ok bool
-		if u, ok = s.blockedUsers[username]; !ok {
+		if u, ok = s.InvalidLoginAttempt[username]; !ok {
 			err = storage.ErrNotFound
 		}
 	})
@@ -338,14 +338,14 @@ func (s *memStorage) DeletePassword(email string) (err error) {
 	return
 }
 
-func (s *memStorage) DeleteBlockedUser(username string) (err error) {
+func (s *memStorage) DeleteInvalidLoginAttempt(username string) (err error) {
 	username = strings.ToLower(username)
 	s.tx(func() {
-		if _, ok := s.blockedUsers[username]; !ok {
+		if _, ok := s.InvalidLoginAttempt[username]; !ok {
 			err = storage.ErrNotFound
 			return
 		}
-		delete(s.blockedUsers, username)
+		delete(s.InvalidLoginAttempt, username)
 	})
 	return
 }
@@ -473,16 +473,16 @@ func (s *memStorage) UpdatePassword(email string, updater func(p storage.Passwor
 	return
 }
 
-func (s *memStorage) UpdateBlockedUser(username string, updater func(p storage.BlockedUser) (storage.BlockedUser, error)) (err error) {
+func (s *memStorage) UpdateInvalidLoginAttempt(username string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) (err error) {
 	username = strings.ToLower(username)
 	s.tx(func() {
-		req, ok := s.blockedUsers[username]
+		req, ok := s.InvalidLoginAttempt[username]
 		if !ok {
 			err = storage.ErrNotFound
 			return
 		}
 		if req, err = updater(req); err == nil {
-			s.blockedUsers[username] = req
+			s.InvalidLoginAttempt[username] = req
 		}
 	})
 	return

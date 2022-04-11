@@ -161,66 +161,64 @@ func (s staticPasswordsStorage) UpdatePassword(email string, updater func(old Pa
 	return s.Storage.UpdatePassword(email, updater)
 }
 
-type staticBlockedUsersStorage struct {
+type staticInvalidLoginAttemptStorage struct {
 	Storage
 
-	// A read-only set of blockedUsers.
-	blockedUsers []BlockedUser
-	// A map of blockedUsers that is indexed by lower-case usernames
-	blockedUsersByUsername map[string]BlockedUser
+	// A read-only set of InvalidLoginAttempt.
+	InvalidLoginAttempt []InvalidLoginAttempt
+	// A map of InvalidLoginAttempt that is indexed by lower-case usernames
+	InvalidLoginAttemptByUsername map[string]InvalidLoginAttempt
 
 	logger log.Logger
 }
 
-// WithStaticBlockedUsers returns a storage with a read-only set of blockedUsers.
-func WithStaticBlockedUsers(s Storage, staticblockedUsers []BlockedUser, logger log.Logger) Storage {
-	blockedUsersByUsername := make(map[string]BlockedUser, len(staticblockedUsers))
-	for _, u := range staticblockedUsers {
+// WithStaticInvalidLoginAttempt returns a storage with a read-only set of InvalidLoginAttempt.
+func WithStaticInvalidLoginAttempt(s Storage, staticInvalidLoginAttempt []InvalidLoginAttempt, logger log.Logger) Storage {
+	InvalidLoginAttemptByUsername := make(map[string]InvalidLoginAttempt, len(staticInvalidLoginAttempt))
+	for _, u := range staticInvalidLoginAttempt {
 		// Enable case insensitive username comparison.
 		lowerUsername := strings.ToLower(u.Username)
-		if _, ok := blockedUsersByUsername[lowerUsername]; ok {
-			logger.Errorf("Attempting to create StaticblockedUsers with the same username: %s", u.Username)
+		if _, ok := InvalidLoginAttemptByUsername[lowerUsername]; ok {
+			logger.Errorf("Attempting to create StaticInvalidLoginAttempt with the same username: %s", u.Username)
 		}
-		blockedUsersByUsername[lowerUsername] = u
+		InvalidLoginAttemptByUsername[lowerUsername] = u
 	}
 
-	return staticBlockedUsersStorage{s, staticblockedUsers, blockedUsersByUsername, logger}
+	return staticInvalidLoginAttemptStorage{s, staticInvalidLoginAttempt, InvalidLoginAttemptByUsername, logger}
 }
 
-func (s staticBlockedUsersStorage) isStatic(username string) bool {
-	_, ok := s.blockedUsersByUsername[strings.ToLower(username)]
+func (s staticInvalidLoginAttemptStorage) isStatic(username string) bool {
+	_, ok := s.InvalidLoginAttemptByUsername[strings.ToLower(username)]
 	return ok
 }
 
-func (s staticBlockedUsersStorage) GetBlockedUser(username string) (BlockedUser, error) {
-	// TODO(ericchiang): BLAH. We really need to figure out how to handle
-	// lower cased username better.
+func (s staticInvalidLoginAttemptStorage) GetBlockedUser(username string) (InvalidLoginAttempt, error) {
 	username = strings.ToLower(username)
-	if username, ok := s.blockedUsersByUsername[username]; ok {
+	if username, ok := s.InvalidLoginAttemptByUsername[username]; ok {
 		return username, nil
 	}
-	return s.Storage.GetBlockedUser(username)
+	return s.Storage.GetInvalidLoginAttempt(username)
 }
 
-func (s staticBlockedUsersStorage) CreateBlockedUser(u BlockedUser) error {
+func (s staticInvalidLoginAttemptStorage) CreateInvalidLoginAttempt(u InvalidLoginAttempt) error {
 	if s.isStatic(u.Username) {
-		return errors.New("static usernames: read-only cannot create blockedUsers")
+		return errors.New("static usernames: read-only cannot create InvalidLoginAttempt")
 	}
-	return s.Storage.CreateBlockedUser(u)
+	return s.Storage.CreateInvalidLoginAttempt(u)
 }
 
-func (s staticBlockedUsersStorage) DeleteBlockedUser(username string) error {
+func (s staticInvalidLoginAttemptStorage) DeleteInvalidLoginAttempt(username string) error {
 	if s.isStatic(username) {
-		return errors.New("static usernames: read-only cannot delete blockedUsers")
+		return errors.New("static usernames: read-only cannot delete InvalidLoginAttempt")
 	}
-	return s.Storage.DeleteBlockedUser(username)
+	return s.Storage.DeleteInvalidLoginAttempt(username)
 }
 
-func (s staticBlockedUsersStorage) UpdateBlockedUser(username string, updater func(old BlockedUser) (BlockedUser, error)) error {
+func (s staticInvalidLoginAttemptStorage) UpdateInvalidLoginAttempt(username string, updater func(old InvalidLoginAttempt) (InvalidLoginAttempt, error)) error {
 	if s.isStatic(username) {
-		return errors.New("static usernames: read-only cannot update blockedUsers")
+		return errors.New("static usernames: read-only cannot update InvalidLoginAttempt")
 	}
-	return s.Storage.UpdateBlockedUser(username, updater)
+	return s.Storage.UpdateInvalidLoginAttempt(username, updater)
 }
 
 // staticConnectorsStorage represents a storage with read-only set of connectors.

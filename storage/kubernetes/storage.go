@@ -15,31 +15,31 @@ import (
 )
 
 const (
-	kindAuthCode        = "AuthCode"
-	kindAuthRequest     = "AuthRequest"
-	kindClient          = "OAuth2Client"
-	kindRefreshToken    = "RefreshToken"
-	kindKeys            = "SigningKey"
-	kindPassword        = "Password"
-	kindBlockedUser     = "BlockedUser"
-	kindOfflineSessions = "OfflineSessions"
-	kindConnector       = "Connector"
-	kindDeviceRequest   = "DeviceRequest"
-	kindDeviceToken     = "DeviceToken"
+	kindAuthCode            = "AuthCode"
+	kindAuthRequest         = "AuthRequest"
+	kindClient              = "OAuth2Client"
+	kindRefreshToken        = "RefreshToken"
+	kindKeys                = "SigningKey"
+	kindPassword            = "Password"
+	kindInvalidLoginAttempt = "InvalidLoginAttempt"
+	kindOfflineSessions     = "OfflineSessions"
+	kindConnector           = "Connector"
+	kindDeviceRequest       = "DeviceRequest"
+	kindDeviceToken         = "DeviceToken"
 )
 
 const (
-	resourceAuthCode        = "authcodes"
-	resourceAuthRequest     = "authrequests"
-	resourceClient          = "oauth2clients"
-	resourceRefreshToken    = "refreshtokens"
-	resourceKeys            = "signingkeies" // Kubernetes attempts to pluralize.
-	resourcePassword        = "passwords"
-	resourceBlockedUser     = "blockedusers"
-	resourceOfflineSessions = "offlinesessionses" // Again attempts to pluralize.
-	resourceConnector       = "connectors"
-	resourceDeviceRequest   = "devicerequests"
-	resourceDeviceToken     = "devicetokens"
+	resourceAuthCode            = "authcodes"
+	resourceAuthRequest         = "authrequests"
+	resourceClient              = "oauth2clients"
+	resourceRefreshToken        = "refreshtokens"
+	resourceKeys                = "signingkeies" // Kubernetes attempts to pluralize.
+	resourcePassword            = "passwords"
+	resourceInvalidLoginAttempt = "InvalidLoginAttempt"
+	resourceOfflineSessions     = "offlinesessionses" // Again attempts to pluralize.
+	resourceConnector           = "connectors"
+	resourceDeviceRequest       = "devicerequests"
+	resourceDeviceToken         = "devicetokens"
 )
 
 // Config values for the Kubernetes storage type.
@@ -239,8 +239,8 @@ func (cli *client) CreatePassword(p storage.Password) error {
 	return cli.post(resourcePassword, cli.fromStoragePassword(p))
 }
 
-func (cli *client) CreateBlockedUser(u storage.BlockedUser) error {
-	return cli.post(resourceBlockedUser, cli.fromStorageBlockedUser(u))
+func (cli *client) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
+	return cli.post(resourceInvalidLoginAttempt, cli.fromStorageInvalidLoginAttempt(u))
 }
 
 func (cli *client) CreateRefresh(r storage.RefreshToken) error {
@@ -299,12 +299,12 @@ func (cli *client) GetPassword(email string) (storage.Password, error) {
 	return toStoragePassword(p), nil
 }
 
-func (cli *client) GetBlockedUser(username string) (storage.BlockedUser, error) {
-	u, err := cli.getBlockedUser(username)
+func (cli *client) GetInvalidLoginAttempt(username string) (storage.InvalidLoginAttempt, error) {
+	u, err := cli.getInvalidLoginAttempt(username)
 	if err != nil {
-		return storage.BlockedUser{}, err
+		return storage.InvalidLoginAttempt{}, err
 	}
-	return toStorageBlockedUser(u), nil
+	return toStorageInvalidLoginAttempt(u), nil
 }
 
 func (cli *client) getPassword(email string) (Password, error) {
@@ -321,15 +321,15 @@ func (cli *client) getPassword(email string) (Password, error) {
 	return p, nil
 }
 
-func (cli *client) getBlockedUser(username string) (BlockedUser, error) {
+func (cli *client) getInvalidLoginAttempt(username string) (InvalidLoginAttempt, error) {
 	username = strings.ToLower(username)
-	var u BlockedUser
+	var u InvalidLoginAttempt
 	name := cli.idToName(username)
-	if err := cli.get(resourceBlockedUser, name, &u); err != nil {
-		return BlockedUser{}, err
+	if err := cli.get(resourceInvalidLoginAttempt, name, &u); err != nil {
+		return InvalidLoginAttempt{}, err
 	}
 	if username != u.Username {
-		return BlockedUser{}, fmt.Errorf("get blockedUser: username %q mapped to blockedUser with username %q", username, u.Username)
+		return InvalidLoginAttempt{}, fmt.Errorf("get InvalidLoginAttempt: username %q mapped to InvalidLoginAttempt with username %q", username, u.Username)
 	}
 	return u, nil
 }
@@ -453,13 +453,13 @@ func (cli *client) DeletePassword(email string) error {
 	return cli.delete(resourcePassword, p.ObjectMeta.Name)
 }
 
-func (cli *client) DeleteBlockedUser(username string) error {
+func (cli *client) DeleteInvalidLoginAttempt(username string) error {
 	// Check for hash collision.
-	u, err := cli.getBlockedUser(username)
+	u, err := cli.getInvalidLoginAttempt(username)
 	if err != nil {
 		return err
 	}
-	return cli.delete(resourceBlockedUser, u.ObjectMeta.Name)
+	return cli.delete(resourceInvalidLoginAttempt, u.ObjectMeta.Name)
 }
 
 func (cli *client) DeleteOfflineSessions(userID string, connID string) error {
@@ -527,22 +527,22 @@ func (cli *client) UpdatePassword(email string, updater func(old storage.Passwor
 	return cli.put(resourcePassword, p.ObjectMeta.Name, newPassword)
 }
 
-func (cli *client) UpdateBlockedUser(username string, updater func(old storage.BlockedUser) (storage.BlockedUser, error)) error {
-	u, err := cli.getBlockedUser(username)
+func (cli *client) UpdateInvalidLoginAttempt(username string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+	u, err := cli.getInvalidLoginAttempt(username)
 	if err != nil {
 		return err
 	}
 
-	updated, err := updater(toStorageBlockedUser(u))
+	updated, err := updater(toStorageInvalidLoginAttempt(u))
 	if err != nil {
 		return err
 	}
 	updated.InvalidAttemptsCount = u.InvalidAttemptsCount
 	updated.UpdatedAt = u.UpdatedAt
 
-	newBlockedUser := cli.fromStorageBlockedUser(updated)
-	newBlockedUser.ObjectMeta = u.ObjectMeta
-	return cli.put(resourceBlockedUser, u.ObjectMeta.Name, newBlockedUser)
+	newInvalidLoginAttempt := cli.fromStorageInvalidLoginAttempt(updated)
+	newInvalidLoginAttempt.ObjectMeta = u.ObjectMeta
+	return cli.put(resourceInvalidLoginAttempt, u.ObjectMeta.Name, newInvalidLoginAttempt)
 }
 
 func (cli *client) UpdateOfflineSessions(userID string, connID string, updater func(old storage.OfflineSessions) (storage.OfflineSessions, error)) error {

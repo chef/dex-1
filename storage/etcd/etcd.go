@@ -14,17 +14,17 @@ import (
 )
 
 const (
-	clientPrefix         = "client/"
-	authCodePrefix       = "auth_code/"
-	refreshTokenPrefix   = "refresh_token/"
-	authRequestPrefix    = "auth_req/"
-	passwordPrefix       = "password/"
-	blockedUserPrefix    = "blocked_user/"
-	offlineSessionPrefix = "offline_session/"
-	connectorPrefix      = "connector/"
-	keysName             = "openid-connect-keys"
-	deviceRequestPrefix  = "device_req/"
-	deviceTokenPrefix    = "device_token/"
+	clientPrefix              = "client/"
+	authCodePrefix            = "auth_code/"
+	refreshTokenPrefix        = "refresh_token/"
+	authRequestPrefix         = "auth_req/"
+	passwordPrefix            = "password/"
+	InvalidLoginAttemptPrefix = "invalid_login_attempt/"
+	offlineSessionPrefix      = "offline_session/"
+	connectorPrefix           = "connector/"
+	keysName                  = "openid-connect-keys"
+	deviceRequestPrefix       = "device_req/"
+	deviceTokenPrefix         = "device_token/"
 
 	// defaultStorageTimeout will be applied to all storage's operations.
 	defaultStorageTimeout = 5 * time.Second
@@ -284,10 +284,10 @@ func (c *conn) CreatePassword(p storage.Password) error {
 	return c.txnCreate(ctx, passwordPrefix+strings.ToLower(p.Email), p)
 }
 
-func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
+func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.txnCreate(ctx, blockedUserPrefix+strings.ToLower(u.Username), u)
+	return c.txnCreate(ctx, InvalidLoginAttemptPrefix+strings.ToLower(u.Username), u)
 }
 
 func (c *conn) GetPassword(email string) (p storage.Password, err error) {
@@ -297,10 +297,10 @@ func (c *conn) GetPassword(email string) (p storage.Password, err error) {
 	return p, err
 }
 
-func (c *conn) GetBlockedUser(username string) (u storage.BlockedUser, err error) {
+func (c *conn) GetInvalidLoginAttempt(username string) (u storage.InvalidLoginAttempt, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	err = c.getKey(ctx, keyUsername(blockedUserPrefix, username), &u)
+	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, username), &u)
 	return u, err
 }
 
@@ -322,11 +322,11 @@ func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (st
 	})
 }
 
-func (c *conn) UpdateBlockedUser(username string, updater func(p storage.BlockedUser) (storage.BlockedUser, error)) error {
+func (c *conn) UpdateInvalidLoginAttempt(username string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.txnUpdate(ctx, keyEmail(blockedUserPrefix, username), func(currentValue []byte) ([]byte, error) {
-		var current storage.BlockedUser
+	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, username), func(currentValue []byte) ([]byte, error) {
+		var current storage.InvalidLoginAttempt
 		if len(currentValue) > 0 {
 			if err := json.Unmarshal(currentValue, &current); err != nil {
 				return nil, err
@@ -346,10 +346,10 @@ func (c *conn) DeletePassword(email string) error {
 	return c.deleteKey(ctx, keyEmail(passwordPrefix, email))
 }
 
-func (c *conn) DeleteBlockedUser(username string) error {
+func (c *conn) DeleteInvalidLoginAttempt(username string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.deleteKey(ctx, keyEmail(blockedUserPrefix, username))
+	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, username))
 }
 
 func (c *conn) ListPasswords() (passwords []storage.Password, err error) {
