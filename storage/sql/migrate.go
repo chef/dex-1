@@ -277,7 +277,7 @@ var migrations = []migration{
 	{
 		stmts: []string{
 			`
-			create table if not exists blocked_user (
+			create table if not exists invalid_login_attempts (
 				username text not null primary key,
 				invalid_attempts_count integer not null default 1,
 				updated_at timestamptz not null default '0001-01-01 00:00:00 UTC'

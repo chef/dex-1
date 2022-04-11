@@ -518,9 +518,9 @@ func (c *conn) UpdateClient(id string, updater func(old storage.Client) (storage
 	})
 }
 
-func (c *conn) UpdateBlockedUser(username string, updater func(old storage.BlockedUser) (storage.BlockedUser, error)) error {
+func (c *conn) UpdateInvalidLoginAttempt(username string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
 	return c.ExecTx(func(tx *trans) error {
-		u, err := getBlockedUser(tx, username)
+		u, err := getInvalidLoginAttempt(tx, username)
 		if err != nil {
 			return err
 		}
@@ -530,15 +530,15 @@ func (c *conn) UpdateBlockedUser(username string, updater func(old storage.Block
 		}
 
 		_, err = tx.Exec(`
-			update blocked_user
+			update invalid_login_attempts
 			set
-				invalid_attempts_count = $1,
+				InvalidLoginAttempt = $1,
 				updated_at = $2
 			where username = $3;
 		`, nu.InvalidAttemptsCount, nu.UpdatedAt, username,
 		)
 		if err != nil {
-			return fmt.Errorf("update blocked_user: %v", err)
+			return fmt.Errorf("update invalid_login_attempts: %v", err)
 		}
 		return nil
 	})
@@ -563,9 +563,9 @@ func (c *conn) CreateClient(cli storage.Client) error {
 	return nil
 }
 
-func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
+func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
 	_, err := c.Exec(`
-		insert into blocked_user (
+		insert into invalid_login_attempts (
 			username, invalid_attempts_count, updated_at
 		)
 		values ($1, $2, $3);
@@ -576,7 +576,7 @@ func (c *conn) CreateBlockedUser(u storage.BlockedUser) error {
 		if c.alreadyExistsCheck(err) {
 			return storage.ErrAlreadyExists
 		}
-		return fmt.Errorf("insert into blocked_user: %v", err)
+		return fmt.Errorf("insert into invalid_login_attempts: %v", err)
 	}
 	return nil
 }
@@ -683,19 +683,19 @@ func (c *conn) GetPassword(email string) (storage.Password, error) {
 	return getPassword(c, email)
 }
 
-func (c *conn) GetBlockedUser(username string) (storage.BlockedUser, error) {
-	u, err := getBlockedUser(c, username)
+func (c *conn) GetInvalidLoginAttempt(username string) (storage.InvalidLoginAttempt, error) {
+	u, err := getInvalidLoginAttempt(c, username)
 	if err == storage.ErrNotFound {
 		return u, nil
 	}
 	return u, err
 }
 
-func getBlockedUser(q querier, username string) (u storage.BlockedUser, err error) {
-	return scanBlockedUser(q.QueryRow(`
+func getInvalidLoginAttempt(q querier, username string) (u storage.InvalidLoginAttempt, err error) {
+	return scanInvalidLoginAttempt(q.QueryRow(`
 	select
 		username, invalid_attempts_count, updated_at
-	from blocked_user where username = $1;
+	from invalid_login_attempts where username = $1;
 	`, strings.ToLower(username)))
 }
 
@@ -745,7 +745,7 @@ func scanPassword(s scanner) (p storage.Password, err error) {
 	return p, nil
 }
 
-func scanBlockedUser(s scanner) (u storage.BlockedUser, err error) {
+func scanInvalidLoginAttempt(s scanner) (u storage.InvalidLoginAttempt, err error) {
 	err = s.Scan(
 		&u.Username, &u.InvalidAttemptsCount, &u.UpdatedAt,
 	)
@@ -753,7 +753,7 @@ func scanBlockedUser(s scanner) (u storage.BlockedUser, err error) {
 		if err == sql.ErrNoRows {
 			return u, storage.ErrNotFound
 		}
-		return u, fmt.Errorf("select blockeduser: %v", err)
+		return u, fmt.Errorf("select InvalidLoginAttempt: %v", err)
 	}
 	return u, nil
 }
@@ -938,8 +938,8 @@ func (c *conn) DeleteRefresh(id string) error     { return c.delete("refresh_tok
 func (c *conn) DeletePassword(email string) error {
 	return c.delete("password", "email", strings.ToLower(email))
 }
-func (c *conn) DeleteBlockedUser(username string) error {
-	return c.delete("blocked_user", "username", strings.ToLower(username))
+func (c *conn) DeleteInvalidLoginAttempt(username string) error {
+	return c.delete("invalid_login_attempts", "username", strings.ToLower(username))
 }
 func (c *conn) DeleteConnector(id string) error { return c.delete("connector", "id", id) }
 
