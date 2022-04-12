@@ -219,10 +219,10 @@ func TestStaticBlockedUsers(t *testing.T) {
 	}
 	backing := New(logger)
 
-	u1 := storage.InvalidLoginAttempt{Username: "foo_secret", InvalidAttemptsCount: 0}
-	u2 := storage.InvalidLoginAttempt{Username: "bar_secret", InvalidAttemptsCount: 4}
-	u3 := storage.InvalidLoginAttempt{Username: "spam_secret", InvalidAttemptsCount: 2}
-	u4 := storage.InvalidLoginAttempt{Username: "Spam_secret", InvalidAttemptsCount: 5}
+	u1 := storage.InvalidLoginAttempt{Username: "foo_secret", InvalidLoginAttemptsCount: 0}
+	u2 := storage.InvalidLoginAttempt{Username: "bar_secret", InvalidLoginAttemptsCount: 4}
+	u3 := storage.InvalidLoginAttempt{Username: "spam_secret", InvalidLoginAttemptsCount: 2}
+	u4 := storage.InvalidLoginAttempt{Username: "Spam_secret", InvalidLoginAttemptsCount: 5}
 
 	backing.CreateInvalidLoginAttempt(u1)
 	s := storage.WithStaticInvalidLoginAttempt(backing, []storage.InvalidLoginAttempt{u2}, logger)
@@ -268,7 +268,7 @@ func TestStaticBlockedUsers(t *testing.T) {
 			name: "update non-static InvalidLoginAttempt",
 			action: func() error {
 				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
-					u.InvalidAttemptsCount = u.InvalidAttemptsCount + 1
+					u.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount + 1
 					u.UpdatedAt = time.Now()
 					return u, nil
 				}

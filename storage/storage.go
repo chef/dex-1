@@ -56,9 +56,9 @@ type GCResult struct {
 }
 
 type InvalidLoginAttempt struct {
-	Username             string
-	InvalidAttemptsCount int32
-	UpdatedAt            time.Time
+	Username                  string
+	InvalidLoginAttemptsCount int32
+	UpdatedAt                 time.Time
 }
 
 // Storage is the storage interface used by the server. Implementations are

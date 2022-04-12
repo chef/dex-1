@@ -530,10 +530,10 @@ func (c *conn) UpdateInvalidLoginAttempt(username string, updater func(old stora
 		_, err = tx.Exec(`
 			update invalid_login_attempts
 			set
-				InvalidLoginAttempt = $1,
+				invalid_login_attempts_count = $1,
 				updated_at = $2
 			where username = $3;
-		`, nu.InvalidAttemptsCount, nu.UpdatedAt, username,
+		`, nu.InvalidLoginAttemptsCount, nu.UpdatedAt, username,
 		)
 		if err != nil {
 			return fmt.Errorf("update invalid_login_attempts: %v", err)
@@ -564,11 +564,11 @@ func (c *conn) CreateClient(cli storage.Client) error {
 func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
 	_, err := c.Exec(`
 		insert into invalid_login_attempts (
-			username, invalid_attempts_count, updated_at
+			username, invalid_login_attempts_count, updated_at
 		)
 		values ($1, $2, $3);
 	`,
-		strings.ToLower(u.Username), u.InvalidAttemptsCount, u.UpdatedAt,
+		strings.ToLower(u.Username), u.InvalidLoginAttemptsCount, u.UpdatedAt,
 	)
 	if err != nil {
 		if c.alreadyExistsCheck(err) {
@@ -690,7 +690,7 @@ func (c *conn) GetInvalidLoginAttempt(username string) (storage.InvalidLoginAtte
 func getInvalidLoginAttempt(q querier, username string) (u storage.InvalidLoginAttempt, err error) {
 	return scanInvalidLoginAttempt(q.QueryRow(`
 	select
-		username, invalid_attempts_count, updated_at
+		username, invalid_login_attempts_count, updated_at
 	from invalid_login_attempts where username = $1;
 	`, strings.ToLower(username)))
 }
@@ -742,7 +742,7 @@ func scanPassword(s scanner) (p storage.Password, err error) {
 
 func scanInvalidLoginAttempt(s scanner) (u storage.InvalidLoginAttempt, err error) {
 	err = s.Scan(
-		&u.Username, &u.InvalidAttemptsCount, &u.UpdatedAt,
+		&u.Username, &u.InvalidLoginAttemptsCount, &u.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

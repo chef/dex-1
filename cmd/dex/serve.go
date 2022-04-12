@@ -262,10 +262,10 @@ func serve(cmd *cobra.Command, args []string) error {
 		serverConfig.IDTokensValidFor = idTokens
 	}
 
-	if c.InvalidAttempts.EnableInvalidAttempts {
-		serverConfig.EnableInvalidAttempts = c.InvalidAttempts.EnableInvalidAttempts
-		serverConfig.BlockDuration = c.InvalidAttempts.BlockDuration
-		serverConfig.MaxAttemptsAllowed = c.InvalidAttempts.MaxAttemptsAllowed
+	if c.InvalidLoginAttempts.EnableInvalidLoginAttempts {
+		serverConfig.EnableInvalidLoginAttempts = c.InvalidLoginAttempts.EnableInvalidLoginAttempts
+		serverConfig.BlockedDuration = c.InvalidLoginAttempts.BlockedDuration
+		serverConfig.MaxInvalidLoginAttemptsAllowed = c.InvalidLoginAttempts.MaxInvalidLoginAttemptsAllowed
 	}
 
 	if c.Expiry.AuthRequests != "" {
