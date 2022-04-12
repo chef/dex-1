@@ -82,9 +82,9 @@ type Config struct {
 	AuthRequestsValidFor   time.Duration // Defaults to 24 hours
 	DeviceRequestsValidFor time.Duration // Defaults to 5 minutes
 
-	EnableInvalidAttempts bool
-	BlockDuration         int32
-	MaxAttemptsAllowed    int32
+	EnableInvalidLoginAttempts     bool
+	BlockedDuration                int32
+	MaxInvalidLoginAttemptsAllowed int32
 	// If set, the server will use this connector to handle password grants
 	PasswordConnector string
 
@@ -166,9 +166,9 @@ type Server struct {
 	authRequestsValidFor   time.Duration
 	deviceRequestsValidFor time.Duration
 
-	enableInvalidAttempts bool
-	blockDuration         int32
-	maxAttemptsAllowed    int32
+	enableInvalidLoginAttempts     bool
+	blockedDuration                int32
+	maxInvalidLoginAttemptsAllowed int32
 
 	logger log.Logger
 }
@@ -231,22 +231,22 @@ func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy)
 	}
 
 	s := &Server{
-		issuerURL:              *issuerURL,
-		connectors:             make(map[string]Connector),
-		storage:                newKeyCacher(c.Storage, now),
-		supportedResponseTypes: supported,
-		idTokensValidFor:       value(c.IDTokensValidFor, 24*time.Hour),
-		authRequestsValidFor:   value(c.AuthRequestsValidFor, 24*time.Hour),
-		deviceRequestsValidFor: value(c.DeviceRequestsValidFor, 5*time.Minute),
-		skipApproval:           c.SkipApprovalScreen,
-		alwaysShowLogin:        c.AlwaysShowLoginScreen,
-		now:                    now,
-		templates:              tmpls,
-		passwordConnector:      c.PasswordConnector,
-		logger:                 c.Logger,
-		enableInvalidAttempts:  c.EnableInvalidAttempts,
-		blockDuration:          c.BlockDuration,
-		maxAttemptsAllowed:     c.MaxAttemptsAllowed,
+		issuerURL:                      *issuerURL,
+		connectors:                     make(map[string]Connector),
+		storage:                        newKeyCacher(c.Storage, now),
+		supportedResponseTypes:         supported,
+		idTokensValidFor:               value(c.IDTokensValidFor, 24*time.Hour),
+		authRequestsValidFor:           value(c.AuthRequestsValidFor, 24*time.Hour),
+		deviceRequestsValidFor:         value(c.DeviceRequestsValidFor, 5*time.Minute),
+		skipApproval:                   c.SkipApprovalScreen,
+		alwaysShowLogin:                c.AlwaysShowLoginScreen,
+		now:                            now,
+		templates:                      tmpls,
+		passwordConnector:              c.PasswordConnector,
+		logger:                         c.Logger,
+		enableInvalidLoginAttempts:     c.EnableInvalidLoginAttempts,
+		blockedDuration:                c.BlockedDuration,
+		maxInvalidLoginAttemptsAllowed: c.MaxInvalidLoginAttemptsAllowed,
 	}
 
 	// Retrieves connector objects in backend storage. This list includes the static connectors

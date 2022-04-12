@@ -389,9 +389,8 @@ type InvalidLoginAttempt struct {
 	// This field is IMMUTABLE. Do not change.
 	Username string `json:"username,omitempty"`
 
-	InvalidAttemptsCount int32     `json:"invalid_attempts_count,omitempty"`
-	CreatedAt            time.Time `json:"created_at"`
-	UpdatedAt            time.Time `json:"updated_at"`
+	InvalidLoginAttemptsCount int32     `json:"invalid_login_attempts_count,omitempty"`
+	UpdatedAt                 time.Time `json:"updated_at"`
 }
 
 // PasswordList is a list of Passwords.
@@ -439,17 +438,17 @@ func (cli *client) fromStorageInvalidLoginAttempt(u storage.InvalidLoginAttempt)
 			Name:      cli.idToName(username),
 			Namespace: cli.namespace,
 		},
-		Username:             username,
-		InvalidAttemptsCount: u.InvalidAttemptsCount,
-		UpdatedAt:            u.UpdatedAt,
+		Username:                  username,
+		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
+		UpdatedAt:                 u.UpdatedAt,
 	}
 }
 
 func toStorageInvalidLoginAttempt(u InvalidLoginAttempt) storage.InvalidLoginAttempt {
 	return storage.InvalidLoginAttempt{
-		Username:             u.Username,
-		InvalidAttemptsCount: u.InvalidAttemptsCount,
-		UpdatedAt:            u.UpdatedAt,
+		Username:                  u.Username,
+		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
+		UpdatedAt:                 u.UpdatedAt,
 	}
 }
 

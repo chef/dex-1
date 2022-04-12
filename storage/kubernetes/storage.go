@@ -537,7 +537,7 @@ func (cli *client) UpdateInvalidLoginAttempt(username string, updater func(old s
 	if err != nil {
 		return err
 	}
-	updated.InvalidAttemptsCount = u.InvalidAttemptsCount
+	updated.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount
 	updated.UpdatedAt = u.UpdatedAt
 
 	newInvalidLoginAttempt := cli.fromStorageInvalidLoginAttempt(updated)

@@ -21,15 +21,15 @@ import (
 
 // Config is the config format for the main application.
 type Config struct {
-	Issuer          string          `json:"issuer"`
-	Storage         Storage         `json:"storage"`
-	Web             Web             `json:"web"`
-	Telemetry       Telemetry       `json:"telemetry"`
-	OAuth2          OAuth2          `json:"oauth2"`
-	GRPC            GRPC            `json:"grpc"`
-	Expiry          Expiry          `json:"expiry"`
-	InvalidAttempts InvalidAttempts `json:"invalidAttempts`
-	Logger          Logger          `json:"logger"`
+	Issuer               string               `json:"issuer"`
+	Storage              Storage              `json:"storage"`
+	Web                  Web                  `json:"web"`
+	Telemetry            Telemetry            `json:"telemetry"`
+	OAuth2               OAuth2               `json:"oauth2"`
+	GRPC                 GRPC                 `json:"grpc"`
+	Expiry               Expiry               `json:"expiry"`
+	InvalidLoginAttempts InvalidLoginAttempts `json:"invalidLoginAttempts`
+	Logger               Logger               `json:"logger"`
 
 	Frontend server.WebConfig `json:"frontend"`
 
@@ -315,8 +315,8 @@ type Logger struct {
 	Format string `json:"format"`
 }
 
-type InvalidAttempts struct {
-	EnableInvalidAttempts bool  `json:"enableInvalidAttempts"`
-	BlockDuration         int32 `json:"blockDuration"`
-	MaxAttemptsAllowed    int32 `json:"maxAttemptsAllowed"`
+type InvalidLoginAttempts struct {
+	EnableInvalidLoginAttempts     bool  `json:"enableInvalidLoginAttempts"`
+	BlockedDuration                int32 `json:"blockedDuration"`
+	MaxInvalidLoginAttemptsAllowed int32 `json:"maxInvalidLoginAttemptsAllowed"`
 }
