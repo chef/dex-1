@@ -209,7 +209,7 @@ func (s *Server) discoveryHandler() (http.HandlerFunc, error) {
 	}), nil
 }
 
-func (s *Server) isFailedAttemptDurationExceeded(u storage.InvalidLoginAttempt) bool {
+func (s *Server) isBlockedTimeExpired(u storage.InvalidLoginAttempt) bool {
 	if diff := time.Since(u.UpdatedAt); diff.Minutes() > float64(s.blockedDuration) {
 		return true
 	}
@@ -240,6 +240,10 @@ func (s *Server) isUserBlocked(u storage.InvalidLoginAttempt) bool {
 		return true
 	}
 	return false
+}
+
+func (s *Server) isUserNotFetchedFromDb(username string, u storage.InvalidLoginAttempt) bool {
+	return u.Username != username
 }
 
 func (s *Server) updateInvalidAttemptCount(username string, w http.ResponseWriter, r *http.Request) {
@@ -439,8 +443,6 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 
-		fmt.Println(s.maxInvalidLoginAttemptsAllowed, s.enableInvalidLoginAttempts, s.blockedDuration, "dur")
-
 		//check if username is in invalid_login_attempts table
 		InvalidLoginAttempt, err := s.storage.GetInvalidLoginAttempt(username)
 		if err != nil {
@@ -464,7 +466,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !ok {
-			if InvalidLoginAttempt.Username != username {
+			if s.isUserNotFetchedFromDb(username, InvalidLoginAttempt) {
 				//create InvalidLoginAttempt
 				err := s.storage.CreateInvalidLoginAttempt(storage.InvalidLoginAttempt{
 					Username:                  username,
@@ -484,7 +486,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if s.isFailedAttemptDurationExceeded(InvalidLoginAttempt) {
+			if s.isBlockedTimeExpired(InvalidLoginAttempt) {
 				s.resetFailedAttempt(username, w, r)
 				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDuration); err != nil {
 					s.logger.Errorf("Server template error: %v", err)
