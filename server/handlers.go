@@ -358,6 +358,8 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		var InvalidLoginAttempt storage.InvalidLoginAttempt
 
+		fmt.Println(s.enableInvalidLoginAttempts, s.blockedDuration, s.maxInvalidLoginAttemptsAllowed, "ds")
+
 		if s.enableInvalidLoginAttempts {
 			//check if username is in invalid_login_attempts table
 			InvalidLoginAttempt, err = s.storage.GetInvalidLoginAttempt(username)
