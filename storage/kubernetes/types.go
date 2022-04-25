@@ -387,7 +387,7 @@ type InvalidLoginAttempt struct {
 	// The Kubernetes name is actually an encoded version of this value.
 	//
 	// This field is IMMUTABLE. Do not change.
-	Username string `json:"username,omitempty"`
+	UsernameConnID string `json:"username_conn_id,omitempty"`
 
 	InvalidLoginAttemptsCount int32     `json:"invalid_login_attempts_count,omitempty"`
 	UpdatedAt                 time.Time `json:"updated_at"`
@@ -428,17 +428,17 @@ func toStoragePassword(p Password) storage.Password {
 }
 
 func (cli *client) fromStorageInvalidLoginAttempt(u storage.InvalidLoginAttempt) InvalidLoginAttempt {
-	username := strings.ToLower(u.Username)
+	username_conn_id := strings.ToLower(u.UsernameConnID)
 	return InvalidLoginAttempt{
 		TypeMeta: k8sapi.TypeMeta{
 			Kind:       kindInvalidLoginAttempt,
 			APIVersion: cli.apiVersion,
 		},
 		ObjectMeta: k8sapi.ObjectMeta{
-			Name:      cli.idToName(username),
+			Name:      cli.idToName(username_conn_id),
 			Namespace: cli.namespace,
 		},
-		Username:                  username,
+		UsernameConnID:            username_conn_id,
 		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
 		UpdatedAt:                 u.UpdatedAt,
 	}
@@ -446,7 +446,7 @@ func (cli *client) fromStorageInvalidLoginAttempt(u storage.InvalidLoginAttempt)
 
 func toStorageInvalidLoginAttempt(u InvalidLoginAttempt) storage.InvalidLoginAttempt {
 	return storage.InvalidLoginAttempt{
-		Username:                  u.Username,
+		UsernameConnID:            u.UsernameConnID,
 		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
 		UpdatedAt:                 u.UpdatedAt,
 	}

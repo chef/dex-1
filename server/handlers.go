@@ -156,18 +156,18 @@ func (s *Server) isUserBlocked(u storage.InvalidLoginAttempt) bool {
 	return false
 }
 
-func (s *Server) isUserNotFetchedFromDb(username string, u storage.InvalidLoginAttempt) bool {
-	return u.Username != username
+func (s *Server) isUserNotFetchedFromDb(username_conn_id string, u storage.InvalidLoginAttempt) bool {
+	return u.UsernameConnID != strings.ToLower(username_conn_id)
 }
 
-func (s *Server) updateInvalidAttemptCount(username string, w http.ResponseWriter, r *http.Request) {
+func (s *Server) updateInvalidAttemptCount(username_conn_id string, w http.ResponseWriter, r *http.Request) {
 	updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
 		u.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount + 1
 		u.UpdatedAt = time.Now()
 		return u, nil
 	}
 
-	if err := s.storage.UpdateInvalidLoginAttempt(username, updater); err != nil {
+	if err := s.storage.UpdateInvalidLoginAttempt(username_conn_id, updater); err != nil {
 		s.logger.Errorf("Failed to increment invalid counter: %v", err)
 		s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
 		return
@@ -254,7 +254,7 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleInvalidAttempts(w http.ResponseWriter, r *http.Request, username string, InvalidLoginAttempt storage.InvalidLoginAttempt, passwordConnector connector.PasswordConnector, showBacklink bool) {
+func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Request, username_conn_id string, InvalidLoginAttempt storage.InvalidLoginAttempt, passwordConnector connector.PasswordConnector, showBacklink bool, username string) {
 	if !s.enableInvalidLoginAttempts {
 		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDuration, s.enableInvalidLoginAttempts); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
@@ -262,10 +262,10 @@ func (s *Server) handleInvalidAttempts(w http.ResponseWriter, r *http.Request, u
 		return
 	}
 
-	if s.isUserNotFetchedFromDb(username, InvalidLoginAttempt) {
+	if s.isUserNotFetchedFromDb(username_conn_id, InvalidLoginAttempt) {
 		//create InvalidLoginAttempt
 		err := s.storage.CreateInvalidLoginAttempt(storage.InvalidLoginAttempt{
-			Username:                  username,
+			UsernameConnID:            username_conn_id,
 			InvalidLoginAttemptsCount: 1,
 			UpdatedAt:                 time.Now(),
 		})
@@ -283,7 +283,7 @@ func (s *Server) handleInvalidAttempts(w http.ResponseWriter, r *http.Request, u
 	}
 
 	if s.isBlockedTimeExpired(InvalidLoginAttempt) {
-		s.resetFailedAttempt(username, w, r)
+		s.resetFailedAttempt(username_conn_id, w, r)
 		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDuration, s.enableInvalidLoginAttempts); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
 		}
@@ -298,7 +298,7 @@ func (s *Server) handleInvalidAttempts(w http.ResponseWriter, r *http.Request, u
 		return
 	}
 
-	s.updateInvalidAttemptCount(username, w, r)
+	s.updateInvalidAttemptCount(username_conn_id, w, r)
 
 	if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount+1, s.maxInvalidLoginAttemptsAllowed, s.blockedDuration, s.enableInvalidLoginAttempts); err != nil {
 		s.logger.Errorf("Server template error: %v", err)
@@ -406,20 +406,15 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Printf("conn.Connector: %s\n", mux.Vars(r)["connector"])
-
 		username := r.FormValue("login")
 		password := r.FormValue("password")
 		connID := mux.Vars(r)["connector"]
 		var InvalidLoginAttempt storage.InvalidLoginAttempt
-
-		user := username + ":" + connID
-
-		fmt.Printf("user: %s\n", user)
+		username_conn_id := username + ":" + connID
 
 		if s.enableInvalidLoginAttempts {
-			//check if username is in invalid_login_attempts table
-			InvalidLoginAttempt, err = s.storage.GetInvalidLoginAttempt(username)
+			//check if user is in invalid_login_attempts table
+			InvalidLoginAttempt, err = s.storage.GetInvalidLoginAttempt(username_conn_id)
 			if err != nil {
 				s.logger.Errorf("Failed to get InvalidLoginAttempt: %v", err)
 				s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Failed to get InvalidLoginAttempt: %v", err))
@@ -438,12 +433,11 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		identity, ok, err := passwordConnector.Login(r.Context(), scopes, username, password)
 		if err != nil {
 			s.logger.Errorf("Failed to login user: %v", err)
-			s.handleInvalidAttempts(w, r, username, InvalidLoginAttempt, passwordConnector, showBacklink)
-			// s.renderError(r, w, http.StatusInternalServerError, fmt.Sprintf("Login error: %v", err))
+			s.handleInvalidLoginAttempts(w, r, username_conn_id, InvalidLoginAttempt, passwordConnector, showBacklink, username)
 			return
 		}
 		if !ok {
-			s.handleInvalidAttempts(w, r, username, InvalidLoginAttempt, passwordConnector, showBacklink)
+			s.handleInvalidLoginAttempts(w, r, username_conn_id, InvalidLoginAttempt, passwordConnector, showBacklink, username)
 			return
 		}
 
@@ -454,7 +448,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := s.storage.DeleteInvalidLoginAttempt(username); err != nil && err != storage.ErrNotFound {
+		if err := s.storage.DeleteInvalidLoginAttempt(username_conn_id); err != nil && err != storage.ErrNotFound {
 			s.logger.Errorf("Failed to delete InvalidLoginAttempt: %v", err)
 			s.renderError(r, w, http.StatusInternalServerError, "db error.")
 			return
