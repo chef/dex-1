@@ -492,9 +492,16 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		fmt.Printf("conn.Connector: %s\n", mux.Vars(r)["connector"])
+
 		username := r.FormValue("login")
 		password := r.FormValue("password")
+		connID := mux.Vars(r)["connector"]
 		var InvalidLoginAttempt storage.InvalidLoginAttempt
+
+		user := username + ":" + connID
+
+		fmt.Printf("user: %s\n", user)
 
 		if s.enableInvalidLoginAttempts {
 			//check if username is in invalid_login_attempts table
