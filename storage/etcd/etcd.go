@@ -287,7 +287,7 @@ func (c *conn) CreatePassword(p storage.Password) error {
 func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.txnCreate(ctx, InvalidLoginAttemptPrefix+strings.ToLower(u.Username), u)
+	return c.txnCreate(ctx, InvalidLoginAttemptPrefix+strings.ToLower(u.UsernameConnID), u)
 }
 
 func (c *conn) GetPassword(email string) (p storage.Password, err error) {
@@ -297,10 +297,10 @@ func (c *conn) GetPassword(email string) (p storage.Password, err error) {
 	return p, err
 }
 
-func (c *conn) GetInvalidLoginAttempt(username string) (u storage.InvalidLoginAttempt, err error) {
+func (c *conn) GetInvalidLoginAttempt(username_conn_id string) (u storage.InvalidLoginAttempt, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, username), &u)
+	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, username_conn_id), &u)
 	return u, err
 }
 
@@ -322,10 +322,10 @@ func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (st
 	})
 }
 
-func (c *conn) UpdateInvalidLoginAttempt(username string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+func (c *conn) UpdateInvalidLoginAttempt(username_conn_id string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, username), func(currentValue []byte) ([]byte, error) {
+	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id), func(currentValue []byte) ([]byte, error) {
 		var current storage.InvalidLoginAttempt
 		if len(currentValue) > 0 {
 			if err := json.Unmarshal(currentValue, &current); err != nil {
@@ -346,10 +346,10 @@ func (c *conn) DeletePassword(email string) error {
 	return c.deleteKey(ctx, keyEmail(passwordPrefix, email))
 }
 
-func (c *conn) DeleteInvalidLoginAttempt(username string) error {
+func (c *conn) DeleteInvalidLoginAttempt(username_conn_id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, username))
+	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id))
 }
 
 func (c *conn) ListPasswords() (passwords []storage.Password, err error) {

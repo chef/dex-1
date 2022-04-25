@@ -219,10 +219,10 @@ func TestStaticBlockedUsers(t *testing.T) {
 	}
 	backing := New(logger)
 
-	u1 := storage.InvalidLoginAttempt{Username: "foo_secret", InvalidLoginAttemptsCount: 0}
-	u2 := storage.InvalidLoginAttempt{Username: "bar_secret", InvalidLoginAttemptsCount: 4}
-	u3 := storage.InvalidLoginAttempt{Username: "spam_secret", InvalidLoginAttemptsCount: 2}
-	u4 := storage.InvalidLoginAttempt{Username: "Spam_secret", InvalidLoginAttemptsCount: 5}
+	u1 := storage.InvalidLoginAttempt{UsernameConnID: "foo_secret:ldap", InvalidLoginAttemptsCount: 0}
+	u2 := storage.InvalidLoginAttempt{UsernameConnID: "bar_secret:local", InvalidLoginAttemptsCount: 4}
+	u3 := storage.InvalidLoginAttempt{UsernameConnID: "spam_secret:local", InvalidLoginAttemptsCount: 2}
+	u4 := storage.InvalidLoginAttempt{UsernameConnID: "Spam_secret:ldap", InvalidLoginAttemptsCount: 5}
 
 	backing.CreateInvalidLoginAttempt(u1)
 	s := storage.WithStaticInvalidLoginAttempt(backing, []storage.InvalidLoginAttempt{u2}, logger)
@@ -235,21 +235,21 @@ func TestStaticBlockedUsers(t *testing.T) {
 		{
 			name: "get InvalidLoginAttempt from static storage",
 			action: func() error {
-				_, err := s.GetInvalidLoginAttempt(u2.Username)
+				_, err := s.GetInvalidLoginAttempt(u2.UsernameConnID)
 				return err
 			},
 		},
 		{
 			name: "get InvalidLoginAttempt from backing storage",
 			action: func() error {
-				_, err := s.GetInvalidLoginAttempt(u1.Username)
+				_, err := s.GetInvalidLoginAttempt(u1.UsernameConnID)
 				return err
 			},
 		},
 		{
 			name: "get InvalidLoginAttempt from static storage with casing",
 			action: func() error {
-				_, err := s.GetInvalidLoginAttempt(strings.ToUpper(u2.Username))
+				_, err := s.GetInvalidLoginAttempt(strings.ToUpper(u2.UsernameConnID))
 				return err
 			},
 		},
@@ -257,10 +257,10 @@ func TestStaticBlockedUsers(t *testing.T) {
 			name: "update static InvalidLoginAttempt",
 			action: func() error {
 				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
-					u.Username = "new_" + u.Username
+					u.UsernameConnID = "new_" + u.UsernameConnID
 					return u, nil
 				}
-				return s.UpdateInvalidLoginAttempt(u2.Username, updater)
+				return s.UpdateInvalidLoginAttempt(u2.UsernameConnID, updater)
 			},
 			wantErr: true,
 		},
@@ -272,7 +272,7 @@ func TestStaticBlockedUsers(t *testing.T) {
 					u.UpdatedAt = time.Now()
 					return u, nil
 				}
-				return s.UpdateInvalidLoginAttempt(u1.Username, updater)
+				return s.UpdateInvalidLoginAttempt(u1.UsernameConnID, updater)
 			},
 		},
 		{
@@ -288,12 +288,12 @@ func TestStaticBlockedUsers(t *testing.T) {
 		{
 			name: "get InvalidLoginAttempt",
 			action: func() error {
-				u, err := s.GetInvalidLoginAttempt(u4.Username)
+				u, err := s.GetInvalidLoginAttempt(u4.UsernameConnID)
 				if err != nil {
 					return err
 				}
-				if strings.Compare(u.Username, u4.Username) != 0 {
-					return fmt.Errorf("expected %s InvalidLoginAttempt got %s", u4.Username, u.Username)
+				if strings.Compare(u.UsernameConnID, u4.UsernameConnID) != 0 {
+					return fmt.Errorf("expected %s InvalidLoginAttempt got %s", u4.UsernameConnID, u.UsernameConnID)
 				}
 				return nil
 			},
