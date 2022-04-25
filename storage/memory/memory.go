@@ -158,12 +158,12 @@ func (s *memStorage) CreatePassword(p storage.Password) (err error) {
 }
 
 func (s *memStorage) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) (err error) {
-	lowerUsername := strings.ToLower(u.Username)
+	lowerUsernameConnID := strings.ToLower(u.UsernameConnID)
 	s.tx(func() {
-		if _, ok := s.InvalidLoginAttempt[lowerUsername]; ok {
+		if _, ok := s.InvalidLoginAttempt[lowerUsernameConnID]; ok {
 			err = storage.ErrAlreadyExists
 		} else {
-			s.InvalidLoginAttempt[lowerUsername] = u
+			s.InvalidLoginAttempt[lowerUsernameConnID] = u
 		}
 	})
 	return
