@@ -284,7 +284,7 @@ func (t *templates) login(r *http.Request, w http.ResponseWriter, connectors []c
 	return renderTemplate(w, t.loginTmpl, data)
 }
 
-func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, InvalidLoginAttemptsCount int32, maxInvalidLoginAttemptsAllowed int32, blockedDuration int32, enableInvalidLoginAttempts bool) error {
+func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, InvalidLoginAttemptsCount int32, maxInvalidLoginAttemptsAllowed int32, blockedDurationInMinutes int32, enableInvalidLoginAttempts bool) error {
 	data := struct {
 		PostURL                        string
 		BackLink                       bool
@@ -294,9 +294,9 @@ func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, la
 		ReqPath                        string
 		InvalidLoginAttemptsCount      int32
 		MaxInvalidLoginAttemptsAllowed int32
-		BlockedDuration                int32
+		BlockedDurationInMinutes       int32
 		EnableInvalidLoginAttempts     bool
-	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, InvalidLoginAttemptsCount, maxInvalidLoginAttemptsAllowed, blockedDuration, enableInvalidLoginAttempts}
+	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, InvalidLoginAttemptsCount, maxInvalidLoginAttemptsAllowed, blockedDurationInMinutes, enableInvalidLoginAttempts}
 	return renderTemplate(w, t.passwordTmpl, data)
 }
 
