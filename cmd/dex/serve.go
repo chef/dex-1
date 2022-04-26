@@ -291,7 +291,7 @@ func runServe(options serveOptions) error {
 
 	if c.InvalidLoginAttempts.EnableInvalidLoginAttempts {
 		serverConfig.EnableInvalidLoginAttempts = c.InvalidLoginAttempts.EnableInvalidLoginAttempts
-		serverConfig.BlockedDuration = c.InvalidLoginAttempts.BlockedDuration
+		serverConfig.BlockedDurationInMinutes = c.InvalidLoginAttempts.BlockedDurationInMinutes
 		serverConfig.MaxInvalidLoginAttemptsAllowed = c.InvalidLoginAttempts.MaxInvalidLoginAttemptsAllowed
 	}
 

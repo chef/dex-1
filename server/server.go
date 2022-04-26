@@ -83,7 +83,7 @@ type Config struct {
 	DeviceRequestsValidFor time.Duration // Defaults to 5 minutes
 
 	EnableInvalidLoginAttempts     bool
-	BlockedDuration                int32
+	BlockedDurationInMinutes       int32
 	MaxInvalidLoginAttemptsAllowed int32
 	// If set, the server will use this connector to handle password grants
 	PasswordConnector string
@@ -167,7 +167,7 @@ type Server struct {
 	deviceRequestsValidFor time.Duration
 
 	enableInvalidLoginAttempts     bool
-	blockedDuration                int32
+	blockedDurationInMinutes       int32
 	maxInvalidLoginAttemptsAllowed int32
 
 	logger log.Logger
@@ -245,7 +245,7 @@ func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy)
 		passwordConnector:              c.PasswordConnector,
 		logger:                         c.Logger,
 		enableInvalidLoginAttempts:     c.EnableInvalidLoginAttempts,
-		blockedDuration:                c.BlockedDuration,
+		blockedDurationInMinutes:       c.BlockedDurationInMinutes,
 		maxInvalidLoginAttemptsAllowed: c.MaxInvalidLoginAttemptsAllowed,
 	}
 
