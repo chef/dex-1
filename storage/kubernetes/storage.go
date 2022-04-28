@@ -299,8 +299,8 @@ func (cli *client) GetPassword(email string) (storage.Password, error) {
 	return toStoragePassword(p), nil
 }
 
-func (cli *client) GetInvalidLoginAttempt(username string) (storage.InvalidLoginAttempt, error) {
-	u, err := cli.getInvalidLoginAttempt(username)
+func (cli *client) GetInvalidLoginAttempt(username_conn_id string) (storage.InvalidLoginAttempt, error) {
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
 	if err != nil {
 		return storage.InvalidLoginAttempt{}, err
 	}
@@ -321,15 +321,15 @@ func (cli *client) getPassword(email string) (Password, error) {
 	return p, nil
 }
 
-func (cli *client) getInvalidLoginAttempt(username string) (InvalidLoginAttempt, error) {
-	username = strings.ToLower(username)
+func (cli *client) getInvalidLoginAttempt(username_conn_id string) (InvalidLoginAttempt, error) {
+	username_conn_id = strings.ToLower(username_conn_id)
 	var u InvalidLoginAttempt
-	name := cli.idToName(username)
+	name := cli.idToName(username_conn_id)
 	if err := cli.get(resourceInvalidLoginAttempt, name, &u); err != nil {
 		return InvalidLoginAttempt{}, err
 	}
-	if username != u.Username {
-		return InvalidLoginAttempt{}, fmt.Errorf("get InvalidLoginAttempt: username %q mapped to InvalidLoginAttempt with username %q", username, u.Username)
+	if username_conn_id != u.UsernameConnID {
+		return InvalidLoginAttempt{}, fmt.Errorf("get InvalidLoginAttempt: username_conn_id %q mapped to InvalidLoginAttempt with username_conn_id %q", username_conn_id, u.UsernameConnID)
 	}
 	return u, nil
 }
@@ -453,9 +453,9 @@ func (cli *client) DeletePassword(email string) error {
 	return cli.delete(resourcePassword, p.ObjectMeta.Name)
 }
 
-func (cli *client) DeleteInvalidLoginAttempt(username string) error {
+func (cli *client) DeleteInvalidLoginAttempt(username_conn_id string) error {
 	// Check for hash collision.
-	u, err := cli.getInvalidLoginAttempt(username)
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
 	if err != nil {
 		return err
 	}
@@ -527,8 +527,8 @@ func (cli *client) UpdatePassword(email string, updater func(old storage.Passwor
 	return cli.put(resourcePassword, p.ObjectMeta.Name, newPassword)
 }
 
-func (cli *client) UpdateInvalidLoginAttempt(username string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
-	u, err := cli.getInvalidLoginAttempt(username)
+func (cli *client) UpdateInvalidLoginAttempt(username_conn_id string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
 	if err != nil {
 		return err
 	}
