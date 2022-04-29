@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -288,7 +289,7 @@ func (t *templates) login(r *http.Request, w http.ResponseWriter, connectors []c
 	return renderTemplate(w, t.loginTmpl, data)
 }
 
-func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, InvalidLoginAttemptsCount int32, maxInvalidLoginAttemptsAllowed int32, blockedDurationInMinutes int32, enableInvalidLoginAttempts bool) error {
+func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, InvalidLoginAttemptsCount int32, maxInvalidLoginAttemptsAllowed int32, blockedDurationInMinutes int32, enableInvalidLoginAttempts bool, invalidLoginAttemptUpdatedAt time.Time) error {
 	data := struct {
 		PostURL                        string
 		BackLink                       bool
@@ -300,7 +301,8 @@ func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, la
 		MaxInvalidLoginAttemptsAllowed int32
 		BlockedDurationInMinutes       int32
 		EnableInvalidLoginAttempts     bool
-	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, InvalidLoginAttemptsCount, maxInvalidLoginAttemptsAllowed, blockedDurationInMinutes, enableInvalidLoginAttempts}
+		InvalidLoginAttemptUpdatedAt   time.Time
+	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, InvalidLoginAttemptsCount, maxInvalidLoginAttemptsAllowed, blockedDurationInMinutes, enableInvalidLoginAttempts, invalidLoginAttemptUpdatedAt}
 	return renderTemplate(w, t.passwordTmpl, data)
 }
 
