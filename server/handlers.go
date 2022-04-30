@@ -369,7 +369,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			}
 			http.Redirect(w, r, callbackURL, http.StatusFound)
 		case connector.PasswordConnector:
-			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink, 0, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
+			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink, 0, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, time.Now()); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
 		case connector.SAMLConnector:
