@@ -342,7 +342,7 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Request, username_conn_id string, InvalidLoginAttempt storage.InvalidLoginAttempt, passwordConnector connector.PasswordConnector, showBacklink bool, username string) {
 	if !s.enableInvalidLoginAttempts {
-		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
 		}
 		return
@@ -362,7 +362,7 @@ func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
 		}
 		return
@@ -370,7 +370,7 @@ func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Reque
 
 	if s.isBlockedTimeExpired(InvalidLoginAttempt) {
 		s.resetFailedAttempt(username_conn_id, w, r)
-		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, 1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
 		}
 		return
@@ -378,7 +378,7 @@ func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Reque
 
 	if s.isAllowedFailedAttemptExceeded(InvalidLoginAttempt) {
 		s.logger.Errorf("User is blocked: %v", InvalidLoginAttempt.InvalidLoginAttemptsCount)
-		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+		if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
 			s.logger.Errorf("Server template error: %v", err)
 		}
 		return
@@ -386,7 +386,8 @@ func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Reque
 
 	s.updateInvalidAttemptCount(username_conn_id, w, r)
 
-	if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount+1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+	if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount+1, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts,
+		InvalidLoginAttempt.UpdatedAt); err != nil {
 		s.logger.Errorf("Server template error: %v", err)
 	}
 	return
@@ -454,7 +455,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 			}
 			http.Redirect(w, r, callbackURL, http.StatusFound)
 		case connector.PasswordConnector:
-			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink, 0, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+			if err := s.templates.password(r, w, r.URL.String(), "", usernamePrompt(conn), false, showBacklink, 0, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, time.Now()); err != nil {
 				s.logger.Errorf("Server template error: %v", err)
 			}
 		case connector.SAMLConnector:
@@ -509,7 +510,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 
 			if s.isUserBlocked(InvalidLoginAttempt) {
 				s.logger.Errorf("User is blocked")
-				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts); err != nil {
+				if err := s.templates.password(r, w, r.URL.String(), username, usernamePrompt(passwordConnector), true, showBacklink, InvalidLoginAttempt.InvalidLoginAttemptsCount, s.maxInvalidLoginAttemptsAllowed, s.blockedDurationInMinutes, s.enableInvalidLoginAttempts, InvalidLoginAttempt.UpdatedAt); err != nil {
 					s.logger.Errorf("Server template error: %v", err)
 				}
 				return
