@@ -778,8 +778,11 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	fmt.Println(u, r.URL.Host, r.URL, s.issuerURL, "urlllz")
-
+	fmt.Println(s.issuerURL.RawPath, "urlllz")
+	fmt.Println(s.issuerURL.Host, "urlllz1")
+	fmt.Println(s.issuerURL.Hostname(), "urlllz2")
+	fmt.Println(s.issuerURL.RequestURI(), "urlllz3")
+	fmt.Println(s.issuerURL.String(), "urlllz4")
 	// fmt.Println(r.Response.Location(), "location")
 	// req, err := http.NewRequest("GET", c.baseURL+"/api/v1/user", nil)
 
