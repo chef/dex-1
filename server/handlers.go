@@ -778,7 +778,15 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	fmt.Println(u, r.URL.Host, r.URL, "urlll")
+	fmt.Println(u, r.URL.Host, r.URL, s.issuerURL, "urlllz")
+
+	// fmt.Println(r.Response.Location(), "location")
+	// req, err := http.NewRequest("GET", c.baseURL+"/api/v1/user", nil)
+
+	// client := new(http.Client)
+	// client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	//     return errors.New("Redirect")
+	// }
 
 	// response, err := http.Get("/session/userpolicies")
 
