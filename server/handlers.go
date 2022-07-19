@@ -778,9 +778,9 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	fmt.Println(u, r.Host, r.RequestURI, "urlll")
+	fmt.Println(u, r.URL.Host, r.URL, "urlll")
 
-	// response, err := http.Get(r.Host, r.RequestURI)
+	response, err := http.Get("/session/userpolicies")
 
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
