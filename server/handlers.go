@@ -778,7 +778,9 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	fmt.Println(u, "urlll")
+	fmt.Println(u, r.Host, r.RequestURI, "urlll")
+
+	// response, err := http.Get(r.Host, r.RequestURI)
 
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
