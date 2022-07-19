@@ -778,13 +778,19 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
-	fmt.Println(s.issuerURL.RawPath, "urlllz")
-	fmt.Println(s.issuerURL.Host, "urlllz1")
-	fmt.Println(s.issuerURL.Hostname(), "urlllz2")
-	fmt.Println(s.issuerURL.RequestURI(), "urlllz3")
-	fmt.Println(s.issuerURL.String(), "urlllz4")
+	// fmt.Println(s.issuerURL.RawPath, "urlllz")
+	// fmt.Println(s.issuerURL.Host, "urlllz1")
+	// fmt.Println(s.issuerURL.Hostname(), "urlllz2")
+	// fmt.Println(s.issuerURL.RequestURI(), "urlllz3")
+	// fmt.Println(s.issuerURL.String(), "urlllz4")
 	// fmt.Println(r.Response.Location(), "location")
-	// req, err := http.NewRequest("GET", c.baseURL+"/api/v1/user", nil)
+
+	req, err := http.NewRequest("GET", "https://"+s.issuerURL.Host+"/session/userpolicies", nil)
+	if err != nil {
+		fmt.Println(err, "err get call")
+	}
+
+	fmt.Println(req, "reqAz")
 
 	// client := new(http.Client)
 	// client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
