@@ -818,11 +818,13 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				"user_id":  authReq.Claims.UserID,
 			})
 
-			resp, err := http.Post("https://"+s.issuerURL.Host+"/session/userpolicies", "application/json", bytes.NewBuffer(postBody))
+			resp, err := http.NewRequest("POST", "https://"+s.issuerURL.Host+"/session/userpolicies", bytes.NewBuffer(postBody))
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
 			}
+			resp.Header.Add("Content-Type", "application/json")
+
 			defer resp.Body.Close()
 			//Read the response body
 			body, err := ioutil.ReadAll(resp.Body)
