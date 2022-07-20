@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -780,34 +779,6 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		s.renderError(r, w, http.StatusInternalServerError, "Invalid redirect URI.")
 		return
 	}
-
-	// fmt.Println(s.issuerURL.RawPath, "urlllz")
-	// fmt.Println(s.issuerURL.Host, "urlllz1")
-	// fmt.Println(s.issuerURL.Hostname(), "urlllz2")
-	// fmt.Println(s.issuerURL.RequestURI(), "urlllz3")
-	// fmt.Println(s.issuerURL.String(), "urlllz4")
-	// fmt.Println(r.Response.Location(), "location")
-
-	//Leverage Go's HTTP Post function to make request
-
-	req, err := http.NewRequest("POST", "https://"+s.issuerURL.Host+"/session/userpolicies", nil)
-	if err != nil {
-		fmt.Println(err, "err get call")
-	}
-
-	fmt.Println(req.Body, "reqAz")
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(string(body))
-
-	// client := new(http.Client)
-	// client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-	//     return errors.New("Redirect")
-	// }
-
-	// response, err := http.Get("/session/userpolicies")
 
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
