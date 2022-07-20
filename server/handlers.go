@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -780,6 +779,30 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		return
 	}
 
+	type Member struct {
+		Name string `json:"name"`
+	}
+
+	type Effect int
+	type Type int
+
+	type Statement struct {
+		Actions   []string `json:"actions"`
+		Resources []string `json:"resources"`
+		Role      string   `json:"role"`
+		Projects  []string `json:"projects"`
+		Effect    Effect   `json:"effect"`
+	}
+
+	type UserPolices struct {
+		ID         string      `json:"id"`
+		Name       string      `json:"name"`
+		Members    []Member    `json:"members"`
+		Statements []Statement `json:"statements"`
+		Type       Type        `json:"type"`
+		Projects   []string    `json:"projects"`
+	}
+
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
 		// the "normal" code flow?
@@ -825,14 +848,28 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			}
 			resp.Header.Add("Content-Type", "application/json")
 
-			defer resp.Body.Close()
-			//Read the response body
-			body, err := ioutil.ReadAll(resp.Body)
+			client := &http.Client{}
+			response, err := client.Do(resp)
 			if err != nil {
-				fmt.Println("An Error Occured while reading body", err)
+				fmt.Println("An Error Occured", err)
 			}
-			userPolicies := string(body)
-			fmt.Println(userPolicies, "userPolicies")
+
+			defer response.Body.Close()
+
+			post := &UserPolices{}
+			data := json.NewDecoder(response.Body).Decode(post)
+			if data != nil {
+				fmt.Println("An Error Occured", err)
+			}
+
+			// defer resp.Body.Close()
+			//Read the response body
+			// body, err := ioutil.ReadAll(resp.Body)
+			// if err != nil {
+			// 	fmt.Println("An Error Occured while reading body", err)
+			// }
+			// userPolicies := string(body)
+			fmt.Println(data, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
