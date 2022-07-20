@@ -1,12 +1,15 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -785,12 +788,19 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 	// fmt.Println(s.issuerURL.String(), "urlllz4")
 	// fmt.Println(r.Response.Location(), "location")
 
-	req, err := http.NewRequest("GET", "https://"+s.issuerURL.Host+"/session/userpolicies", nil)
+	//Leverage Go's HTTP Post function to make request
+
+	req, err := http.NewRequest("POST", "https://"+s.issuerURL.Host+"/session/userpolicies", nil)
 	if err != nil {
 		fmt.Println(err, "err get call")
 	}
 
-	fmt.Println(req, "reqAz")
+	fmt.Println(req.Body, "reqAz")
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(body))
 
 	// client := new(http.Client)
 	// client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -831,6 +841,26 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				ConnectorData: authReq.ConnectorData,
 				PKCE:          authReq.PKCE,
 			}
+
+			postBody, _ := json.Marshal(map[string]string{
+				"username": authReq.Claims.Username,
+				"user_id":  authReq.Claims.UserID,
+			})
+			responseBody := bytes.NewBuffer(postBody)
+			resp, err := http.Post("https://"+s.issuerURL.Host+"/session/userpolicies", "application/json", responseBody)
+			//Handle Error
+			if err != nil {
+				s.logger.Errorf("An Error Occured %v", err)
+			}
+			defer resp.Body.Close()
+			//Read the response body
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				s.logger.Errorf("An Error Occured while reading body %v", err)
+			}
+			userPolicies := string(body)
+			fmt.Println(userPolicies, "userPolicies")
+
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
 				s.renderError(r, w, http.StatusInternalServerError, "Internal server error.")
