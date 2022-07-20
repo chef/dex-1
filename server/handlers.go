@@ -846,17 +846,17 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				"username": authReq.Claims.Username,
 				"user_id":  authReq.Claims.UserID,
 			})
-			responseBody := bytes.NewBuffer(postBody)
-			resp, err := http.Post("https://"+s.issuerURL.Host+"/session/userpolicies", "application/json", responseBody)
+
+			resp, err := http.Post("https://"+s.issuerURL.Host+"/session/userpolicies", "application/json", bytes.NewBuffer(postBody))
 			//Handle Error
 			if err != nil {
-				s.logger.Errorf("An Error Occured %v", err)
+				fmt.Println("An Error Occured", err)
 			}
 			defer resp.Body.Close()
 			//Read the response body
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				s.logger.Errorf("An Error Occured while reading body %v", err)
+				fmt.Println("An Error Occured while reading body", err)
 			}
 			userPolicies := string(body)
 			fmt.Println(userPolicies, "userPolicies")
