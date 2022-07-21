@@ -852,7 +852,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				fmt.Println("An Error Occured", err)
 			}
 
-			// defer response.Body.Close()
+			defer response.Body.Close()
 
 			post := &UserPolices{}
 			decoder := json.NewDecoder(response.Body)
