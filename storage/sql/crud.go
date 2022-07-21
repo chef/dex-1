@@ -279,6 +279,7 @@ func (c *conn) GetAuthCode(id string) (a storage.AuthCode, err error) {
 }
 
 func (c *conn) CreateRefresh(r storage.RefreshToken) error {
+	fmt.Println("Testing Refresh API")
 	_, err := c.Exec(`
 		insert into refresh_token (
 			id, client_id, scopes, nonce,
