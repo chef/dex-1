@@ -1176,7 +1176,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(code, "my Code")
 	token := new(internal.RefreshToken)
 	if err := internal.Unmarshal(code, token); err != nil {
 		// For backward compatibility, assume the refresh_token is a raw refresh token ID
