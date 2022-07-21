@@ -847,31 +847,21 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 			client := &http.Client{Transport: tr}
-			resp, err := client.Get(url.String())
-
-			// resp, err := http.Get(url.String())
+			response, err := client.Get(url.String())
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
 			}
 
-			fmt.Println(resp, "resp")
+			defer response.Body.Close()
 
-			// client := &http.Client{}
-			// response, err := client.Do(resp)
-			// if err != nil {
-			// 	fmt.Println("An Error Occured", err)
-			// }
+			post := &UserPolices{}
+			data := json.NewDecoder(response.Body).Decode(post)
+			if data != nil {
+				fmt.Println("An Error Occured", err)
+			}
 
-			// defer response.Body.Close()
-
-			// post := &UserPolices{}
-			// data := json.NewDecoder(response.Body).Decode(post)
-			// if data != nil {
-			// 	fmt.Println("An Error Occured", err)
-			// }
-
-			// fmt.Println(data, "userPoliciesAA")
+			fmt.Println(data, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
