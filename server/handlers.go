@@ -877,8 +877,8 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			//Convert bytes to String and print
 			// jsonStr := string(respBody)
 			// fmt.Println("Response: ", jsonStr)
-			post := &UserPolices{}
-			json.Unmarshal(respBody, &post)
+			var up UserPolices
+			json.Unmarshal(respBody, &up)
 
 			// decoder := json.NewDecoder(response.Body)
 			// decoder.Decode(post)
@@ -886,7 +886,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			// 	fmt.Println("An Error Occured", err)
 			// }
 
-			fmt.Println(post, "userPoliciesAA")
+			fmt.Println(up, "userPoliciesAAU")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
