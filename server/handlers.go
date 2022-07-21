@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
@@ -836,17 +835,18 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				PKCE:          authReq.PKCE,
 			}
 
-			postBody, _ := json.Marshal(map[string]string{
-				"username": authReq.Claims.Username,
-				"user_id":  authReq.Claims.UserID,
-			})
+			url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")
+			q := url.Query()
+			q.Set("username", authReq.Claims.Username)
+			q.Set("user_id", authReq.Claims.UserID)
+			url.RawQuery = q.Encode()
+			fmt.Println(url.String())
 
-			resp, err := http.NewRequest("POST", "https://"+s.issuerURL.Host+"/session/userpolicies", bytes.NewBuffer(postBody))
+			resp, err := http.NewRequest("GET", url.String(), nil)
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
 			}
-			resp.Header.Add("Content-Type", "application/json")
 
 			client := &http.Client{}
 			response, err := client.Do(resp)
@@ -862,13 +862,6 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				fmt.Println("An Error Occured", err)
 			}
 
-			// defer resp.Body.Close()
-			//Read the response body
-			// body, err := ioutil.ReadAll(resp.Body)
-			// if err != nil {
-			// 	fmt.Println("An Error Occured while reading body", err)
-			// }
-			// userPolicies := string(body)
 			fmt.Println(data, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
