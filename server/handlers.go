@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -858,27 +859,27 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 
 			defer response.Body.Close()
 
-			// respBody, err := ioutil.ReadAll(response.Body)
-			// if err != nil {
-			// 	//Failed to read response.
-			// 	fmt.Println("An Error Occured", err)
-			// }
+			respBody, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				//Failed to read response.
+				fmt.Println("An Error Occured", err)
+			}
 
 			//Convert bytes to String and print
 			// jsonStr := string(respBody)
 			// fmt.Println("Response: ", jsonStr)
-			// var up UserPolices
-			// json.Unmarshal(respBody, &up)
+			var up UserPolicies
+			json.Unmarshal(respBody, &up)
 
-			post := UserPolicies{}
+			// post := UserPolicies{}
 
-			decoder := json.NewDecoder(response.Body)
-			decoder.Decode(&post)
+			// decoder := json.NewDecoder(response.Body)
+			// decoder.Decode(&post)
 			// if err != nil {
 			// 	fmt.Println("An Error Occured", err)
 			// }
 
-			fmt.Println(post, "userPoliciesAAU")
+			fmt.Println(up, "userPoliciesAAU")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
