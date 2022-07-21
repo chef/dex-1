@@ -841,7 +841,6 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			q.Set("username", authReq.Claims.Username)
 			q.Set("user_id", authReq.Claims.Email)
 			url.RawQuery = q.Encode()
-			fmt.Println(url.String())
 
 			tr := &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -853,15 +852,16 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				fmt.Println("An Error Occured", err)
 			}
 
-			defer response.Body.Close()
+			// defer response.Body.Close()
 
 			post := &UserPolices{}
-			data := json.NewDecoder(response.Body).Decode(post)
-			if data != nil {
+			decoder := json.NewDecoder(response.Body)
+			decoder.Decode(post)
+			if err != nil {
 				fmt.Println("An Error Occured", err)
 			}
 
-			fmt.Println(data, "userPoliciesAA")
+			fmt.Println(post, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
