@@ -1189,7 +1189,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 	}
 
 	refresh, err := s.storage.GetRefresh(token.RefreshId)
-	fmt.Println(refresh, "myRefresh")
+
 	if err != nil {
 		s.logger.Errorf("failed to get refresh token: %v", err)
 		if err == storage.ErrNotFound {
@@ -1210,7 +1210,13 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 		return
 	}
 	fmt.Println(refresh.LastUsed, "last Used Time")
-
+	currTime := time.Now()
+	diff := currTime.Sub(refresh.LastUsed)
+	if diff.Hours() < 1 {
+		fmt.Println("Woo-Hoo")
+	} else {
+		fmt.Println("Nah")
+	}
 	// Per the OAuth2 spec, if the client has omitted the scopes, default to the original
 	// authorized scopes.
 	//
