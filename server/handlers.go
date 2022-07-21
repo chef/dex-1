@@ -838,7 +838,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")
 			q := url.Query()
 			q.Set("username", authReq.Claims.Username)
-			q.Set("user_id", authReq.Claims.UserID)
+			q.Set("user_id", authReq.Claims.Email)
 			url.RawQuery = q.Encode()
 			fmt.Println(url.String())
 
