@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
@@ -8,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -842,11 +844,23 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			q.Set("user_id", authReq.Claims.Email)
 			url.RawQuery = q.Encode()
 
+			type UserDetails struct {
+				Username string `json:"username"`
+				UserID   string `json:"user_id"`
+			}
+
+			user := UserDetails{
+				Username: authReq.Claims.Email,
+				UserID:   authReq.Claims.UserID,
+			}
+
+			body, _ := json.Marshal(user)
+
 			tr := &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 			client := &http.Client{Transport: tr}
-			response, err := client.Get(url.String())
+			response, err := client.Post(url.String(), "application/json", bytes.NewBuffer(body))
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
@@ -854,14 +868,24 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 
 			defer response.Body.Close()
 
-			post := &UserPolices{}
-			decoder := json.NewDecoder(response.Body)
-			decoder.Decode(post)
+			respBody, err := ioutil.ReadAll(response.Body)
 			if err != nil {
+				//Failed to read response.
 				fmt.Println("An Error Occured", err)
 			}
 
-			fmt.Println(post, "userPoliciesAA")
+			//Convert bytes to String and print
+			jsonStr := string(respBody)
+			fmt.Println("Response: ", jsonStr)
+
+			// post := &UserPolices{}
+			// decoder := json.NewDecoder(response.Body)
+			// decoder.Decode(post)
+			// if err != nil {
+			// 	fmt.Println("An Error Occured", err)
+			// }
+
+			// fmt.Println(post, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
