@@ -848,21 +848,23 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				fmt.Println("An Error Occured", err)
 			}
 
-			client := &http.Client{}
-			response, err := client.Do(resp)
-			if err != nil {
-				fmt.Println("An Error Occured", err)
-			}
+			fmt.Println(resp, "resp")
 
-			defer response.Body.Close()
+			// client := &http.Client{}
+			// response, err := client.Do(resp)
+			// if err != nil {
+			// 	fmt.Println("An Error Occured", err)
+			// }
 
-			post := &UserPolices{}
-			data := json.NewDecoder(response.Body).Decode(post)
-			if data != nil {
-				fmt.Println("An Error Occured", err)
-			}
+			// defer response.Body.Close()
 
-			fmt.Println(data, "userPoliciesAA")
+			// post := &UserPolices{}
+			// data := json.NewDecoder(response.Body).Decode(post)
+			// if data != nil {
+			// 	fmt.Println("An Error Occured", err)
+			// }
+
+			// fmt.Println(data, "userPoliciesAA")
 
 			if err := s.storage.CreateAuthCode(code); err != nil {
 				s.logger.Errorf("Failed to create auth code: %v", err)
