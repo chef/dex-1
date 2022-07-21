@@ -1208,6 +1208,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 		s.tokenErrHelper(w, errInvalidRequest, "Refresh token is invalid or has already been claimed by another client.", http.StatusBadRequest)
 		return
 	}
+	fmt.Println(refresh.LastUsed, "last Used Time")
 
 	// Per the OAuth2 spec, if the client has omitted the scopes, default to the original
 	// authorized scopes.
