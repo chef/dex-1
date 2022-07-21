@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -842,7 +843,13 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			url.RawQuery = q.Encode()
 			fmt.Println(url.String())
 
-			resp, err := http.Get(url.String())
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			client := &http.Client{Transport: tr}
+			resp, err := client.Get(url.String())
+
+			// resp, err := http.Get(url.String())
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
