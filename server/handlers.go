@@ -1189,6 +1189,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 	}
 
 	refresh, err := s.storage.GetRefresh(token.RefreshId)
+	fmt.Println(refresh, "myRefresh")
 	if err != nil {
 		s.logger.Errorf("failed to get refresh token: %v", err)
 		if err == storage.ErrNotFound {
