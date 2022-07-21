@@ -842,7 +842,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			url.RawQuery = q.Encode()
 			fmt.Println(url.String())
 
-			resp, err := http.NewRequest("GET", url.String(), nil)
+			resp, err := http.Get(url.String())
 			//Handle Error
 			if err != nil {
 				fmt.Println("An Error Occured", err)
