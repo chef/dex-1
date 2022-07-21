@@ -779,31 +779,22 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		s.renderError(r, w, http.StatusInternalServerError, "Invalid redirect URI.")
 		return
 	}
-
-	type Member struct {
-		Name string `json:"name"`
+	type UserPolicies struct {
+		Policies []struct {
+			Name       string   `json:"name"`
+			ID         string   `json:"id"`
+			Type       string   `json:"type"`
+			Members    []string `json:"members"`
+			Statements []struct {
+				Effect    string        `json:"effect"`
+				Actions   []interface{} `json:"actions"`
+				Role      string        `json:"role"`
+				Resources []string      `json:"resources"`
+				Projects  []string      `json:"projects"`
+			} `json:"statements"`
+			Projects []interface{} `json:"projects"`
+		} `json:"policies"`
 	}
-
-	type Effect int
-	type Type int
-
-	type Statement struct {
-		Actions   []string `json:"actions"`
-		Resources []string `json:"resources"`
-		Role      string   `json:"role"`
-		Projects  []string `json:"projects"`
-		Effect    Effect   `json:"effect"`
-	}
-
-	type UserPolices struct {
-		ID         string      `json:"id"`
-		Name       string      `json:"name"`
-		Members    []Member    `json:"members"`
-		Statements []Statement `json:"statements"`
-		Type       Type        `json:"type"`
-		Projects   []string    `json:"projects"`
-	}
-
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
 		// the "normal" code flow?
@@ -879,7 +870,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			// var up UserPolices
 			// json.Unmarshal(respBody, &up)
 
-			post := UserPolices{}
+			post := UserPolicies{}
 
 			decoder := json.NewDecoder(response.Body)
 			decoder.Decode(&post)
