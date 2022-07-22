@@ -115,7 +115,13 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Health check passed in %s", t)
 }
 
+func (s *Server) checkingHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the HomePage!")
+	fmt.Println("Endpoint Hit: homePage")
+}
+
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
+
 	refreshCode := r.PostFormValue("refresh_token")
 	if refreshCode == "" {
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
