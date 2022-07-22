@@ -123,11 +123,11 @@ type RefreshTokenCode struct {
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: homePage")
+	code := r.PostFormValue("refresh_token")
 
 	decoder := json.NewDecoder(r.Body)
 	var refreshCode RefreshTokenCode
 	err := decoder.Decode(&refreshCode)
-	code := r.PostFormValue("refresh_token")
 	fmt.Println(code, "check code")
 	if err != nil {
 		log.Fatal(err)
