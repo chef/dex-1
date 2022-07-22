@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -115,9 +117,34 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Health check passed in %s", t)
 }
 
+type Book struct {
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Pages  int    `json:"pages"`
+}
+
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: homePage")
+	w.Header().Set("Content-Type", "application/json")
+	payload := Book{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal(body, &payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(payload, "my payload")
+	// book := Book{
+	// 	Title:  "The Girl on the Train",
+	// 	Author: "Sanju",
+	// 	Pages:  245,
+	// }
+
+	json.NewEncoder(w).Encode(payload)
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
