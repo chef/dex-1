@@ -308,6 +308,7 @@ func (c *conn) CreateRefresh(r storage.RefreshToken) error {
 
 func (c *conn) UpdateRefreshToken(id string, updater func(old storage.RefreshToken) (storage.RefreshToken, error)) error {
 	fmt.Println(id, "my ID")
+
 	return c.ExecTx(func(tx *trans) error {
 		r, err := getRefresh(tx, id)
 		if err != nil {

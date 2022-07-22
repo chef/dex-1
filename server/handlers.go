@@ -115,6 +115,11 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Health check passed in %s", t)
 }
 
+func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the HomePage!")
+	fmt.Println("Endpoint Hit: homePage")
+}
+
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
 	// TODO(ericchiang): Cache this.
 	keys, err := s.storage.GetKeys()
