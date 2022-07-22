@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -127,27 +126,33 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: homePage")
 	w.Header().Set("Content-Type", "application/json")
-	code := r.PostFormValue("title")
-	fmt.Println(code, "myCode4")
-	payload := Book{}
-	body, err := ioutil.ReadAll(r.Body)
+	decoder := json.NewDecoder(r.Body)
+	var t Book
+	err := decoder.Decode(&t)
 	if err != nil {
 		log.Fatal(err)
 	}
+	// code := r.PostFormValue("title")
+	// fmt.Println(code, "myCode4")
+	// payload := Book{}
+	// body, err := ioutil.ReadAll(r.Body)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	err = json.Unmarshal(body, &payload)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err = json.Unmarshal(body, &payload)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	fmt.Println(payload, "my payload")
+	fmt.Println(t, "my payload")
 	// book := Book{
 	// 	Title:  "The Girl on the Train",
 	// 	Author: "Sanju",
 	// 	Pages:  245,
 	// }
 
-	json.NewEncoder(w).Encode(payload)
+	json.NewEncoder(w).Encode(t)
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
