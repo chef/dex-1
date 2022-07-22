@@ -117,7 +117,7 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type RefreshTokenCode struct {
-	RefreshToken string
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
