@@ -122,9 +122,7 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(refreshCode, "my Refresh")
-
 	token := new(internal.RefreshToken)
-
 	if err := internal.Unmarshal(refreshCode, token); err != nil {
 		// For backward compatibility, assume the refresh_token is a raw refresh token ID
 		// if it fails to decode.
@@ -137,7 +135,7 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 
 	refresh, err := s.storage.GetRefresh(token.RefreshId)
 	if err != nil {
-		s.tokenErrHelper(w, errServerError, "Invalid Refresh token", http.StatusInternalServerError)
+		s.tokenErrHelper(w, errServerError, "Refresh token not Found", http.StatusInternalServerError)
 		return
 	}
 	currTime := time.Now()
@@ -146,9 +144,6 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(refresh)
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
