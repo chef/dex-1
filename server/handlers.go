@@ -116,21 +116,12 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the HomePage!")
-	fmt.Println("Endpoint Hit: homePage")
 	refreshCode := r.PostFormValue("refresh_token")
 	if refreshCode == "" {
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
 		return
 	}
 	fmt.Println(refreshCode, "my Refresh")
-	// decoder := json.NewDecoder(r.Body)
-	// var refreshCode RefreshTokenCode
-	// err := decoder.Decode(&refreshCode)
-	// fmt.Println(code, "check code")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	token := new(internal.RefreshToken)
 
@@ -145,6 +136,15 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	refresh, _ := s.storage.GetRefresh(token.RefreshId)
+
+	fmt.Println(refresh.LastUsed, "last Used Time Main")
+	currTime := time.Now()
+	diff := currTime.Sub(refresh.LastUsed)
+	if diff.Hours() <= 1 {
+		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(refresh)
 }
