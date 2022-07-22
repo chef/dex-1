@@ -135,12 +135,14 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 		token = &internal.RefreshToken{RefreshId: refreshCode, Token: ""}
 	}
 
-	refresh, _ := s.storage.GetRefresh(token.RefreshId)
-
-	fmt.Println(refresh.LastUsed, "last Used Time Main")
+	refresh, err := s.storage.GetRefresh(token.RefreshId)
+	if err != nil {
+		s.tokenErrHelper(w, errServerError, "Invalid Refresh token", http.StatusInternalServerError)
+		return
+	}
 	currTime := time.Now()
 	diff := currTime.Sub(refresh.LastUsed)
-	if diff.Hours() <= 1 {
+	if diff.Hours() >= 1 {
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
 		return
 	}
