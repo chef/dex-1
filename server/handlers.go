@@ -127,6 +127,8 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: homePage")
 	w.Header().Set("Content-Type", "application/json")
+	code := r.PostFormValue("title")
+	fmt.Println(code, "myCode4")
 	payload := Book{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -137,6 +139,7 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println(payload, "my payload")
 	// book := Book{
 	// 	Title:  "The Girl on the Train",
