@@ -121,9 +121,9 @@ func (s *Server) checkingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
-
 	refreshCode := r.PostFormValue("refresh_token")
 	if refreshCode == "" {
+		fmt.Println("HEREE")
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
 		return
 	}
