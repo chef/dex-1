@@ -147,9 +147,11 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	currTime := time.Now()
 	diff := currTime.Sub(refresh.LastUsed)
 	if diff.Hours() >= 1 {
+		fmt.Println("Expired")
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
 		return
 	}
+	fmt.Println("Not Expired")
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
