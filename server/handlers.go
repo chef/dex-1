@@ -1003,7 +1003,7 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 	}
 
 	authCode, err := s.storage.GetAuthCode(code)
-	fmt.Println(authCode, "Check2")
+
 	if err != nil || s.now().After(authCode.Expiry) || authCode.ClientID != client.ID {
 		if err != storage.ErrNotFound {
 			s.logger.Errorf("failed to get auth code: %v", err)
