@@ -836,13 +836,15 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			url.RawQuery = q.Encode()
 
 			type UserDetails struct {
-				Username string `json:"username"`
-				UserID   string `json:"user_id"`
+				Username    string `json:"username"`
+				UserID      string `json:"user_id"`
+				ConnectorID string `json:"connector_id"`
 			}
 
 			user := UserDetails{
-				Username: authReq.Claims.Email,
-				UserID:   authReq.Claims.UserID,
+				Username:    authReq.Claims.Email,
+				UserID:      authReq.Claims.UserID,
+				ConnectorID: authReq.ConnectorID,
 			}
 
 			body, _ := json.Marshal(user)
