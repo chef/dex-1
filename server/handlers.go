@@ -34,6 +34,22 @@ const (
 	CodeChallengeMethodS256  = "S256"
 )
 
+type Statements []struct {
+	Effect    string   `json:"effect"`
+	Actions   []string `json:"actions"`
+	Role      string   `json:"role"`
+	Resources []string `json:"resources"`
+	Projects  []string `json:"projects"`
+}
+
+type Policies []struct {
+	Name       string     `json:"name"`
+	ID         string     `json:"id"`
+	Type       string     `json:"type"`
+	Statements Statements `json:"statements"`
+	Projects   []string   `json:"projects"`
+}
+
 // newHealthChecker returns the healthz handler. The handler runs until the
 // provided context is canceled.
 func (s *Server) newHealthChecker(ctx context.Context) http.Handler {
@@ -639,6 +655,27 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 // finalizeLogin associates the user's identity with the current AuthRequest, then returns
 // the approval page's path.
 func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.AuthRequest, conn connector.Connector) (string, error) {
+
+	// var pol Policies
+	// var stmt Statements
+	// storage.Claims.Policies = []Policies{
+	// 	Policies{
+	// 		Name: "test",
+	// 		ID:   "id",
+	// 		Type: "Chef-Managed",
+	// 		Statements: []Statements{
+	// 			Statements{
+	// 				Effect:    "Allow",
+	// 				Actions:   []string{"asdsad", "ASdsadf"},
+	// 				Role:      "Viewer",
+	// 				Resources: []string{"asdsad"},
+	// 				Projects:  []string{"sfd", "*"},
+	// 			},
+	// 		},
+	// 		Projects: []string{"asd", "adsad"},
+	// 	},
+	// }
+
 	claims := storage.Claims{
 		UserID:            identity.UserID,
 		Username:          identity.Username,
@@ -646,6 +683,26 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 		Email:             identity.Email,
 		EmailVerified:     identity.EmailVerified,
 		Groups:            identity.Groups,
+		Policies: storage.Policies{
+			struct {
+				Name       string "json:\"name\""
+				ID         string "json:\"id\""
+				Type       string "json:\"type\""
+				Statements []struct {
+					Effect    string   "json:\"effect\""
+					Actions   []string "json:\"actions\""
+					Role      string   "json:\"role\""
+					Resources []string "json:\"resources\""
+					Projects  []string "json:\"projects\""
+				} "json:\"statements\""
+				Projects []string "json:\"projects\""
+			}{
+				Name:     "test",
+				ID:       "id",
+				Type:     "Chef-Managed",
+				Projects: []string{"asd", "adsad"},
+			},
+		},
 	}
 
 	updater := func(a storage.AuthRequest) (storage.AuthRequest, error) {
@@ -780,22 +837,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		s.renderError(r, w, http.StatusInternalServerError, "Invalid redirect URI.")
 		return
 	}
-	type UserPolicies struct {
-		Policies []struct {
-			Name       string   `json:"name"`
-			ID         string   `json:"id"`
-			Type       string   `json:"type"`
-			Members    []string `json:"members"`
-			Statements []struct {
-				Effect    string        `json:"effect"`
-				Actions   []interface{} `json:"actions"`
-				Role      string        `json:"role"`
-				Resources []string      `json:"resources"`
-				Projects  []string      `json:"projects"`
-			} `json:"statements"`
-			Projects []interface{} `json:"projects"`
-		} `json:"policies"`
-	}
+
 	var (
 		// Was the initial request using the implicit or hybrid flow instead of
 		// the "normal" code flow?
@@ -870,7 +912,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 			//Convert bytes to String and print
 			// jsonStr := string(respBody)
 			// fmt.Println("Response: ", jsonStr)
-			var up UserPolicies
+			var up Policies
 			json.Unmarshal(respBody, &up)
 
 			// post := UserPolicies{}
