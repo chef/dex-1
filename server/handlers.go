@@ -123,11 +123,9 @@ func (s *Server) checkingHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	refreshCode := r.PostFormValue("refresh_token")
 	if refreshCode == "" {
-		fmt.Println("HEREE")
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(refreshCode, "my Refresh")
 	token := new(internal.RefreshToken)
 	if err := internal.Unmarshal(refreshCode, token); err != nil {
 		// For backward compatibility, assume the refresh_token is a raw refresh token ID
@@ -147,11 +145,9 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	currTime := time.Now()
 	diff := currTime.Sub(refresh.LastUsed)
 	if diff.Hours() >= 1 {
-		fmt.Println("Expired")
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("Not Expired")
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
@@ -1216,7 +1212,6 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(code, "my Code")
 	token := new(internal.RefreshToken)
 	if err := internal.Unmarshal(code, token); err != nil {
 		// For backward compatibility, assume the refresh_token is a raw refresh token ID
@@ -1249,14 +1244,7 @@ func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request, clie
 		s.tokenErrHelper(w, errInvalidRequest, "Refresh token is invalid or has already been claimed by another client.", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(refresh.LastUsed, "last Used Time")
-	currTime := time.Now()
-	diff := currTime.Sub(refresh.LastUsed)
-	if diff.Hours() < 1 {
-		fmt.Println("Woo-Hoo")
-	} else {
-		fmt.Println("Nah")
-	}
+
 	// Per the OAuth2 spec, if the client has omitted the scopes, default to the original
 	// authorized scopes.
 	//
