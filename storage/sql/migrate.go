@@ -220,7 +220,7 @@ var migrations = []migration{
 
 			`
 			alter table auth_code
-				add column claims_policies bytea not null default '';`,
+				add column claims_policies bytea not null default '' -- JSON array of strings;`,
 		},
 	},
 	{

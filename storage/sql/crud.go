@@ -243,7 +243,7 @@ func (c *conn) CreateAuthCode(a storage.AuthCode) error {
 		a.ID, a.ClientID, encoder(a.Scopes), a.Nonce, a.RedirectURI, a.Claims.UserID,
 		a.Claims.Username, a.Claims.PreferredUsername, a.Claims.Email, a.Claims.EmailVerified,
 		encoder(a.Claims.Groups), a.ConnectorID, a.ConnectorData, a.Expiry,
-		a.PKCE.CodeChallenge, a.PKCE.CodeChallengeMethod, encoder(a.Claims.Policies),
+		a.PKCE.CodeChallenge, a.PKCE.CodeChallengeMethod, encoder(a.Policies),
 	)
 	if err != nil {
 		if c.alreadyExistsCheck(err) {
@@ -270,7 +270,7 @@ func (c *conn) GetAuthCode(id string) (a storage.AuthCode, err error) {
 		&a.Claims.Username, &a.Claims.PreferredUsername, &a.Claims.Email, &a.Claims.EmailVerified,
 		decoder(&a.Claims.Groups), &a.ConnectorID, &a.ConnectorData, &a.Expiry,
 		&a.PKCE.CodeChallenge, &a.PKCE.CodeChallengeMethod,
-		decoder(&a.Claims.Policies),
+		decoder(&a.Policies),
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

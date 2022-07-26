@@ -853,26 +853,8 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 				RedirectURI:   authReq.RedirectURI,
 				ConnectorData: authReq.ConnectorData,
 				PKCE:          authReq.PKCE,
-				Policies: storage.Policies{
-					struct {
-						Name       string "json:\"name\""
-						ID         string "json:\"id\""
-						Type       string "json:\"type\""
-						Statements []struct {
-							Effect    string   "json:\"effect\""
-							Actions   []string "json:\"actions\""
-							Role      string   "json:\"role\""
-							Resources []string "json:\"resources\""
-							Projects  []string "json:\"projects\""
-						} "json:\"statements\""
-						Projects []string "json:\"projects\""
-					}{
-						Name:     "test",
-						ID:       "id",
-						Type:     "Chef-Managed",
-						Projects: []string{"asd", "adsad"},
-					},
-				},
+				Policies: []string{"asdfsfd", "asdasfdsf"},
+				}
 			}
 
 			url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")

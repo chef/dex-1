@@ -168,20 +168,6 @@ type Client struct {
 	LogoURL string `json:"logoURL" yaml:"logoURL"`
 }
 
-type Policies []struct {
-	Name       string `json:"name"`
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Statements []struct {
-		Effect    string   `json:"effect"`
-		Actions   []string `json:"actions"`
-		Role      string   `json:"role"`
-		Resources []string `json:"resources"`
-		Projects  []string `json:"projects"`
-	} `json:"statements"`
-	Projects []string `json:"projects"`
-}
-
 // Claims represents the ID Token claims supported by the server.
 type Claims struct {
 	UserID            string
@@ -191,8 +177,6 @@ type Claims struct {
 	EmailVerified     bool
 
 	Groups []string
-
-	Policies Policies
 }
 
 // Data needed for PKCE (RFC 7636)
@@ -280,7 +264,7 @@ type AuthCode struct {
 	// PKCE CodeChallenge and CodeChallengeMethod
 	PKCE PKCE
 
-	Policies Policies
+	Policies []string
 }
 
 // RefreshToken is an OAuth2 refresh token which allows a client to request new
