@@ -217,6 +217,10 @@ var migrations = []migration{
 			`
 			alter table refresh_token
 				add column claims_preferred_username text not null default '';`,
+
+			`
+			alter table auth_code
+				add column claims_policies bytea not null default '';`,
 		},
 	},
 	{
