@@ -31,6 +31,10 @@ const (
 	CodeChallengeMethodS256  = "S256"
 )
 
+var (
+	refreshTokenExpiryTime = 1 // In Hour
+)
+
 // newHealthChecker returns the healthz handler. The handler runs until the
 // provided context is canceled.
 func (s *Server) newHealthChecker(ctx context.Context) http.Handler {
@@ -139,7 +143,7 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	currTime := time.Now()
 	diff := currTime.Sub(refresh.LastUsed)
-	if diff.Hours() >= 1 {
+	if diff.Hours() >= float64(refreshTokenExpiryTime) {
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
 		return
 	}
