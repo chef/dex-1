@@ -787,6 +787,8 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(authReq.Claims.Policies, "policiesss")
+
 	switch r.Method {
 	case http.MethodGet:
 		if s.skipApproval {
