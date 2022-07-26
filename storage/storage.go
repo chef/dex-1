@@ -279,6 +279,8 @@ type AuthCode struct {
 
 	// PKCE CodeChallenge and CodeChallengeMethod
 	PKCE PKCE
+
+	Policies Policies
 }
 
 // RefreshToken is an OAuth2 refresh token which allows a client to request new
