@@ -705,7 +705,7 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 		},
 	}
 
-	fmt.Println(claims, "claimss")
+	fmt.Println(claims.Policies, "claimss.Policies")
 
 	updater := func(a storage.AuthRequest) (storage.AuthRequest, error) {
 		a.LoggedIn = true
