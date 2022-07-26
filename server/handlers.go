@@ -115,11 +115,11 @@ func (h *healthChecker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Health check passed in %s", t)
 }
 
-func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) error {
 	refreshCode := r.PostFormValue("refresh_token")
 	if refreshCode == "" {
 		s.tokenErrHelper(w, errInvalidRequest, "No refresh token in request.", http.StatusBadRequest)
-		return
+		return errors.New("No refresh token in request")
 	}
 	token := new(internal.RefreshToken)
 	if err := internal.Unmarshal(refreshCode, token); err != nil {
@@ -135,14 +135,15 @@ func (s *Server) tokenValidHandler(w http.ResponseWriter, r *http.Request) {
 	refresh, err := s.storage.GetRefresh(token.RefreshId)
 	if err != nil {
 		s.tokenErrHelper(w, errServerError, "Refresh token not Found", http.StatusInternalServerError)
-		return
+		return errors.New("Refresh token not Found")
 	}
 	currTime := time.Now()
 	diff := currTime.Sub(refresh.LastUsed)
 	if diff.Hours() >= 1 {
 		s.tokenErrHelper(w, errAccessDenied, "Refresh Token Expired", http.StatusUnauthorized)
-		return
+		return errors.New("Refresh Token Expired")
 	}
+	return nil
 }
 
 func (s *Server) handlePublicKeys(w http.ResponseWriter, r *http.Request) {
