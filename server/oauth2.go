@@ -324,7 +324,6 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		Nonce:    nonce,
 		Expiry:   expiry.Unix(),
 		IssuedAt: issuedAt.Unix(),
-		Policies: []string{"ssdsf", "Afdsfsf"},
 	}
 
 	if accessToken != "" {
@@ -384,6 +383,8 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		// The current client becomes the authorizing party.
 		tok.AuthorizingParty = clientID
 	}
+
+	tok.Policies = []string{"ssdsf", "Afdsfsf"}
 
 	payload, err := json.Marshal(tok)
 	if err != nil {
