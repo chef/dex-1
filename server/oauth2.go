@@ -255,6 +255,12 @@ func (a audience) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]string(a))
 }
 
+type resourceGroup struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
 type idTokenClaims struct {
 	Issuer           string   `json:"iss"`
 	Subject          string   `json:"sub"`
@@ -275,7 +281,7 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
-	Policies          []string           `json:"policies,omitempty"`
+	ResourceGroup     []resourceGroup    `json:"resource_group,omitempty"`
 }
 
 type federatedIDClaims struct {
@@ -384,7 +390,20 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		tok.AuthorizingParty = clientID
 	}
 
-	tok.Policies = []string{"ssdsf", "Afdsfsf"}
+	rg := []resourceGroup{
+		{
+			Type: "project",
+			Name: "xyz_project",
+			Role: "admin",
+		},
+		{
+			Type: "project-2",
+			Name: "abc_project",
+			Role: "editor",
+		},
+	}
+
+	tok.ResourceGroup = rg
 
 	fmt.Println(tok, "tokennn")
 
