@@ -386,6 +386,8 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 
 	tok.Policies = []string{"ssdsf", "Afdsfsf"}
 
+	fmt.Println(tok, "tokennn")
+
 	payload, err := json.Marshal(tok)
 	if err != nil {
 		return "", expiry, fmt.Errorf("could not serialize claims: %v", err)
