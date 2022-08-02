@@ -1,18 +1,21 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"hash"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -310,6 +313,46 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		UserId: claims.UserID,
 		ConnId: connID,
 	}
+
+	url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")
+
+	type UserDetails struct {
+		Username    string `json:"username"`
+		UserID      string `json:"user_id"`
+		ConnectorID string `json:"connector_id"`
+	}
+
+	user := UserDetails{
+		Username:    claims.Email,
+		UserID:      claims.UserID,
+		ConnectorID: connID,
+	}
+
+	body, _ := json.Marshal(user)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	response, err := client.Post(url.String(), "application/json", bytes.NewBuffer(body))
+	//Handle Error
+	if err != nil {
+		fmt.Println("An Error", err)
+	}
+
+	defer response.Body.Close()
+
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		//Failed to read response.
+		fmt.Println("An Error", err)
+	}
+
+	//Convert bytes to String and print
+	jsonStr := string(respBody)
+	fmt.Println("Response: ", jsonStr)
+	// var up Policies
+	// json.Unmarshal(respBody, &up)
 
 	subjectString, err := internal.Marshal(sub)
 	if err != nil {
