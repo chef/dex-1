@@ -337,7 +337,7 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 	response, err := client.Post(url.String(), "application/json", bytes.NewBuffer(body))
 	//Handle Error
 	if err != nil {
-		fmt.Println("An ErrorAA", err)
+		fmt.Println("An error occurred", err)
 	}
 
 	defer response.Body.Close()
@@ -345,7 +345,7 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 	respBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		//Failed to read response.
-		fmt.Println("An ErrorAA", err)
+		fmt.Println("An error occurred", err)
 	}
 
 	//Convert bytes to String and print
