@@ -287,8 +287,8 @@ type federatedIDClaims struct {
 }
 
 type projectRolePairs struct {
-	Role    string   `json:"role"`
-	Project []string `json:"projects"`
+	Role     string   `json:"role"`
+	Projects []string `json:"projects"`
 }
 
 type UserDetails struct {
