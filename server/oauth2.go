@@ -278,11 +278,17 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
+	ProjectRolePairs  []projectRolePairs
 }
 
 type federatedIDClaims struct {
 	ConnectorID string `json:"connector_id,omitempty"`
 	UserID      string `json:"user_id,omitempty"`
+}
+
+type projectRolePairs struct {
+	Role    string
+	Project []string
 }
 
 func (s *Server) newAccessToken(clientID string, claims storage.Claims, scopes []string, nonce, connID string) (accessToken string, err error) {
@@ -320,11 +326,6 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		Username    string `json:"username"`
 		UserID      string `json:"user_id"`
 		ConnectorID string `json:"connector_id"`
-	}
-
-	type projectRolePairs struct {
-		Role    string
-		Project []string
 	}
 
 	user := UserDetails{
@@ -373,6 +374,8 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		Expiry:   expiry.Unix(),
 		IssuedAt: issuedAt.Unix(),
 	}
+
+	tok.ProjectRolePairs = prp
 
 	if accessToken != "" {
 		atHash, err := accessTokenHash(signingAlg, accessToken)
