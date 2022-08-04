@@ -278,7 +278,7 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
-	ProjectRolePairs  []projectRolePairs
+	ProjectRolePairs  []projectRolePairs `json:"project_role_pairs"`
 }
 
 type federatedIDClaims struct {
@@ -287,8 +287,14 @@ type federatedIDClaims struct {
 }
 
 type projectRolePairs struct {
-	Role    string
-	Project []string
+	Role    string   `json:"role"`
+	Project []string `json:"projects"`
+}
+
+type UserDetails struct {
+	Username    string `json:"username"`
+	UserID      string `json:"user_id"`
+	ConnectorID string `json:"connector_id"`
 }
 
 func (s *Server) newAccessToken(clientID string, claims storage.Claims, scopes []string, nonce, connID string) (accessToken string, err error) {
@@ -322,12 +328,6 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 
 	url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")
 
-	type UserDetails struct {
-		Username    string `json:"username"`
-		UserID      string `json:"user_id"`
-		ConnectorID string `json:"connector_id"`
-	}
-
 	user := UserDetails{
 		Username:    claims.Email,
 		UserID:      claims.UserID,
@@ -354,12 +354,8 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		fmt.Println("An error occurred", err)
 	}
 
-	//Convert bytes to String and print
-	jsonStr := string(respBody)
-	fmt.Println("Response: ", jsonStr)
 	var prp []projectRolePairs
 	json.Unmarshal(respBody, &prp)
-	fmt.Println("ResponseAzz__: ", prp)
 
 	subjectString, err := internal.Marshal(sub)
 	if err != nil {
