@@ -322,6 +322,11 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		ConnectorID string `json:"connector_id"`
 	}
 
+	type projectRolePairs struct {
+		Role    string
+		Project []string
+	}
+
 	user := UserDetails{
 		Username:    claims.Email,
 		UserID:      claims.UserID,
@@ -351,8 +356,9 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 	//Convert bytes to String and print
 	jsonStr := string(respBody)
 	fmt.Println("Response: ", jsonStr)
-	// var up Policies
-	// json.Unmarshal(respBody, &up)
+	var prp []projectRolePairs
+	json.Unmarshal(respBody, &prp)
+	fmt.Println("ResponseAzz__: ", prp)
 
 	subjectString, err := internal.Marshal(sub)
 	if err != nil {
