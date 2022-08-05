@@ -278,11 +278,23 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
+	ProjectRolePairs  []projectRolePairs `json:"project_role_pairs"`
 }
 
 type federatedIDClaims struct {
 	ConnectorID string `json:"connector_id,omitempty"`
 	UserID      string `json:"user_id,omitempty"`
+}
+
+type projectRolePairs struct {
+	Role     string   `json:"role"`
+	Projects []string `json:"projects"`
+}
+
+type UserDetails struct {
+	Username    string `json:"username"`
+	UserID      string `json:"user_id"`
+	ConnectorID string `json:"connector_id"`
 }
 
 func (s *Server) newAccessToken(clientID string, claims storage.Claims, scopes []string, nonce, connID string) (accessToken string, err error) {
@@ -316,12 +328,6 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 
 	url, _ := url.Parse("https://" + s.issuerURL.Host + "/session/userpolicies")
 
-	type UserDetails struct {
-		Username    string `json:"username"`
-		UserID      string `json:"user_id"`
-		ConnectorID string `json:"connector_id"`
-	}
-
 	user := UserDetails{
 		Username:    claims.Email,
 		UserID:      claims.UserID,
@@ -335,24 +341,21 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 	}
 	client := &http.Client{Transport: tr}
 	response, err := client.Post(url.String(), "application/json", bytes.NewBuffer(body))
-	//Handle Error
 	if err != nil {
-		fmt.Println("An error occurred", err)
+		s.logger.Errorf("Failed to post user data %v", err)
+		return "", expiry, err
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		//Failed to read response.
-		fmt.Println("An error occurred", err)
+		s.logger.Errorf("Failed to read body %v", err)
+		return "", expiry, err
 	}
 
-	//Convert bytes to String and print
-	jsonStr := string(respBody)
-	fmt.Println("Response: ", jsonStr)
-	// var up Policies
-	// json.Unmarshal(respBody, &up)
+	var _projectRolePairs []projectRolePairs
+	json.Unmarshal(respBody, &_projectRolePairs)
 
 	subjectString, err := internal.Marshal(sub)
 	if err != nil {
@@ -367,6 +370,8 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		Expiry:   expiry.Unix(),
 		IssuedAt: issuedAt.Unix(),
 	}
+
+	tok.ProjectRolePairs = _projectRolePairs
 
 	if accessToken != "" {
 		atHash, err := accessTokenHash(signingAlg, accessToken)
