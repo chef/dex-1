@@ -341,21 +341,21 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 	}
 	client := &http.Client{Transport: tr}
 	response, err := client.Post(url.String(), "application/json", bytes.NewBuffer(body))
-	//Handle Error
 	if err != nil {
-		fmt.Println("An error occurred", err)
+		s.logger.Errorf("Failed to post user data %v", err)
+		return "", expiry, err
 	}
 
 	defer response.Body.Close()
 
 	respBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		//Failed to read response.
-		fmt.Println("An error occurred", err)
+		s.logger.Errorf("Failed to read body %v", err)
+		return "", expiry, err
 	}
 
-	var prp []projectRolePairs
-	json.Unmarshal(respBody, &prp)
+	var _projectRolePairs []projectRolePairs
+	json.Unmarshal(respBody, &_projectRolePairs)
 
 	subjectString, err := internal.Marshal(sub)
 	if err != nil {
@@ -371,7 +371,7 @@ func (s *Server) newIDToken(clientID string, claims storage.Claims, scopes []str
 		IssuedAt: issuedAt.Unix(),
 	}
 
-	tok.ProjectRolePairs = prp
+	tok.ProjectRolePairs = _projectRolePairs
 
 	if accessToken != "" {
 		atHash, err := accessTokenHash(signingAlg, accessToken)
