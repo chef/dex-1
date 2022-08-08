@@ -810,6 +810,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		}
 		return
 	}
+	fmt.Println(authReq.RedirectURI, "my url")
 	u, err := url.Parse(authReq.RedirectURI)
 	if err != nil {
 		s.renderError(r, w, http.StatusInternalServerError, "Invalid redirect URI.")
