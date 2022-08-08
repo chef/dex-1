@@ -1038,7 +1038,8 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 		s.tokenErrHelper(w, errInvalidGrant, "Expecting parameter code_verifier in PKCE flow.", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(authCode.RedirectURI, "authCode.RedirectURI")
+	fmt.Println(redirectURI, "redirectURI-queryParam")
 	if authCode.RedirectURI != redirectURI {
 		s.tokenErrHelper(w, errInvalidRequest, "redirect_uri did not match URI from initial request.", http.StatusBadRequest)
 		return
