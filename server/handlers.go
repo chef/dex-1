@@ -992,6 +992,7 @@ func (s *Server) calculateCodeChallenge(codeVerifier, codeChallengeMethod string
 
 // handle an access token request https://tools.ietf.org/html/rfc6749#section-4.1.3
 func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client storage.Client) {
+	fmt.Println(r, "my Request")
 	code := r.PostFormValue("code")
 	redirectURI := r.PostFormValue("redirect_uri")
 
