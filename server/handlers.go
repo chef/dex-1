@@ -763,7 +763,7 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 		s.renderError(r, w, http.StatusInternalServerError, "Login process not yet finalized.")
 		return
 	}
-
+	fmt.Println("heya")
 	switch r.Method {
 	case http.MethodGet:
 		if s.skipApproval {
@@ -786,6 +786,7 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 		}
 		s.sendCodeResponse(w, r, authReq)
 	}
+
 }
 
 func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authReq storage.AuthRequest) {
@@ -927,7 +928,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		q.Set("state", authReq.State)
 		u.RawQuery = q.Encode()
 	}
-
+	fmt.Println(u.String(), "my String")
 	http.Redirect(w, r, u.String(), http.StatusSeeOther)
 }
 
