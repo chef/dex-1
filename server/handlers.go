@@ -950,7 +950,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 		clientID = r.PostFormValue("client_id")
 		clientSecret = r.PostFormValue("client_secret")
 	}
-
+	fmt.Println(r, "All New Token3")
 	client, err := s.storage.GetClient(clientID)
 	if err != nil {
 		if err != storage.ErrNotFound {
