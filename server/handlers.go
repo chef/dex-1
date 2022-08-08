@@ -972,6 +972,8 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	grantType := r.PostFormValue("grant_type")
+	fmt.Println(r, "All New Token2")
+	fmt.Println(grantType, "grant")
 	switch grantType {
 	case grantTypeAuthorizationCode:
 		s.handleAuthCode(w, r, client)
