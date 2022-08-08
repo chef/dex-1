@@ -936,6 +936,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r, "All New Token")
 	clientID, clientSecret, ok := r.BasicAuth()
+	fmt.Println(r, "All New Token4")
 	if ok {
 		var err error
 		if clientID, err = url.QueryUnescape(clientID); err != nil {
