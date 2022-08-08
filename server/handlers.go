@@ -950,8 +950,11 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Println("not ok")
+		fmt.Println(r, "All New Token5")
 		clientID = r.PostFormValue("client_id")
+		fmt.Println(r, "All New Token6")
 		clientSecret = r.PostFormValue("client_secret")
+		fmt.Println(r, "All New Token7")
 	}
 	fmt.Println(r, "All New Token3")
 	client, err := s.storage.GetClient(clientID)
