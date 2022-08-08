@@ -373,6 +373,7 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	if err := s.templates.login(r, w, connectorInfos); err != nil {
 		s.logger.Errorf("Server template error: %v", err)
 	}
+	fmt.Println("Bii")
 }
 
 func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Request, username_conn_id string, InvalidLoginAttempt storage.InvalidLoginAttempt, passwordConnector connector.PasswordConnector, showBacklink bool, username string) {
