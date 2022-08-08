@@ -938,6 +938,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	clientID, clientSecret, ok := r.BasicAuth()
 	fmt.Println(r, "All New Token4")
 	if ok {
+		fmt.Println("ok")
 		var err error
 		if clientID, err = url.QueryUnescape(clientID); err != nil {
 			s.tokenErrHelper(w, errInvalidRequest, "client_id improperly encoded", http.StatusBadRequest)
@@ -948,6 +949,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		fmt.Println("not ok")
 		clientID = r.PostFormValue("client_id")
 		clientSecret = r.PostFormValue("client_secret")
 	}
