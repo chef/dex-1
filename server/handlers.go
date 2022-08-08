@@ -297,6 +297,7 @@ func (s *Server) updateInvalidAttemptCount(username_conn_id string, w http.Respo
 // handleAuthorization handles the OAuth2 auth endpoint.
 func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Holaa")
+	fmt.Println(r, "new Request")
 	authReq, err := s.parseAuthorizationRequest(r)
 	if err != nil {
 		s.logger.Errorf("Failed to parse authorization request: %v", err)
