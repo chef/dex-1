@@ -296,8 +296,6 @@ func (s *Server) updateInvalidAttemptCount(username_conn_id string, w http.Respo
 
 // handleAuthorization handles the OAuth2 auth endpoint.
 func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Holaa")
-	fmt.Println(r, "new Request")
 	authReq, err := s.parseAuthorizationRequest(r)
 	if err != nil {
 		s.logger.Errorf("Failed to parse authorization request: %v", err)
@@ -374,7 +372,6 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	if err := s.templates.login(r, w, connectorInfos); err != nil {
 		s.logger.Errorf("Server template error: %v", err)
 	}
-	fmt.Println("Bii")
 }
 
 func (s *Server) handleInvalidLoginAttempts(w http.ResponseWriter, r *http.Request, username_conn_id string, InvalidLoginAttempt storage.InvalidLoginAttempt, passwordConnector connector.PasswordConnector, showBacklink bool, username string) {
@@ -763,7 +760,6 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 		s.renderError(r, w, http.StatusInternalServerError, "Login process not yet finalized.")
 		return
 	}
-	fmt.Println("heya")
 	switch r.Method {
 	case http.MethodGet:
 		if s.skipApproval {
@@ -810,7 +806,6 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		}
 		return
 	}
-	fmt.Println(authReq.RedirectURI, "my url")
 	u, err := url.Parse(authReq.RedirectURI)
 	if err != nil {
 		s.renderError(r, w, http.StatusInternalServerError, "Invalid redirect URI.")
@@ -929,7 +924,6 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 		q.Set("state", authReq.State)
 		u.RawQuery = q.Encode()
 	}
-	fmt.Println(u.String(), "my String")
 	http.Redirect(w, r, u.String(), http.StatusSeeOther)
 }
 
@@ -996,7 +990,6 @@ func (s *Server) calculateCodeChallenge(codeVerifier, codeChallengeMethod string
 
 // handle an access token request https://tools.ietf.org/html/rfc6749#section-4.1.3
 func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client storage.Client) {
-	fmt.Println(r, "my Request")
 	code := r.PostFormValue("code")
 	redirectURI := r.PostFormValue("redirect_uri")
 
@@ -1043,8 +1036,6 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 		s.tokenErrHelper(w, errInvalidGrant, "Expecting parameter code_verifier in PKCE flow.", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(authCode.RedirectURI, "authCode.RedirectURI")
-	fmt.Println(redirectURI, "redirectURI-queryParam")
 	if authCode.RedirectURI != redirectURI {
 		s.tokenErrHelper(w, errInvalidRequest, "redirect_uri did not match URI from initial request.", http.StatusBadRequest)
 		return
