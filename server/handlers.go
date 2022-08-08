@@ -934,11 +934,8 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 }
 
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r, "All New Token")
 	clientID, clientSecret, ok := r.BasicAuth()
-	fmt.Println(r, "All New Token4")
 	if ok {
-		fmt.Println("ok")
 		var err error
 		if clientID, err = url.QueryUnescape(clientID); err != nil {
 			s.tokenErrHelper(w, errInvalidRequest, "client_id improperly encoded", http.StatusBadRequest)
@@ -949,14 +946,9 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		fmt.Println("not ok")
-		fmt.Println(r, "All New Token5")
 		clientID = r.PostFormValue("client_id")
-		fmt.Println(r, "All New Token6")
 		clientSecret = r.PostFormValue("client_secret")
-		fmt.Println(r, "All New Token7")
 	}
-	fmt.Println(r, "All New Token3")
 	client, err := s.storage.GetClient(clientID)
 	if err != nil {
 		if err != storage.ErrNotFound {
@@ -978,8 +970,6 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	grantType := r.PostFormValue("grant_type")
-	fmt.Println(r, "All New Token2")
-	fmt.Println(grantType, "grant")
 	switch grantType {
 	case grantTypeAuthorizationCode:
 		s.handleAuthCode(w, r, client)
