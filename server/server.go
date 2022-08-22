@@ -175,6 +175,7 @@ type Server struct {
 
 // NewServer constructs a server from the provided config.
 func NewServer(ctx context.Context, c Config) (*Server, error) {
+	fmt.Println("Server without key")
 	return newServer(ctx, c, defaultRotationStrategy(
 		value(c.RotateKeysAfter, 6*time.Hour),
 		value(c.IDTokensValidFor, 24*time.Hour),
@@ -183,6 +184,7 @@ func NewServer(ctx context.Context, c Config) (*Server, error) {
 
 // NewServerWithKey constructs a server from the provided config and a static signing key.
 func NewServerWithKey(ctx context.Context, c Config, privateKey *rsa.PrivateKey) (*Server, error) {
+	fmt.Println("Server with key")
 	return newServer(ctx, c, staticRotationStrategy(
 		privateKey,
 	))
