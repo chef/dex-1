@@ -928,6 +928,7 @@ func (s *Server) sendCodeResponse(w http.ResponseWriter, r *http.Request, authRe
 }
 
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hello HandleToken")
 	clientID, clientSecret, ok := r.BasicAuth()
 	if ok {
 		var err error
