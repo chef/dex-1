@@ -189,6 +189,7 @@ func NewServerWithKey(ctx context.Context, c Config, privateKey *rsa.PrivateKey)
 }
 
 func newServer(ctx context.Context, c Config, rotationStrategy rotationStrategy) (*Server, error) {
+	fmt.Println("Checking Again")
 	issuerURL, err := url.Parse(c.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("server: can't parse issuer URL")
