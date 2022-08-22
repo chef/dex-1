@@ -549,7 +549,7 @@ func openConnector(logger log.Logger, conn storage.Connector) (connector.Connect
 // OpenConnector updates server connector map with specified connector object.
 func (s *Server) OpenConnector(conn storage.Connector) (Connector, error) {
 	var c connector.Connector
-	fmt.Println(conn, "ConnectionType")
+	fmt.Println(string(conn.Config), "ConnectionType")
 	if conn.Type == LocalConnector {
 		c = newPasswordDB(s.storage)
 	} else {
