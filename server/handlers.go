@@ -1,11 +1,13 @@
 package server
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 	"path"
@@ -154,7 +156,7 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	if connectorID != "" {
 		for _, c := range connectors {
 			if c.ID == connectorID {
-				connURL.Path = s.absPath("/auth", c.ID)
+				connURL.Path = s.absPath("/auth", url.PathEscape(c.ID))
 				http.Redirect(w, r, connURL.String(), http.StatusFound)
 				return
 			}
@@ -164,18 +166,18 @@ func (s *Server) handleAuthorization(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(connectors) == 1 && !s.alwaysShowLogin {
-		connURL.Path = s.absPath("/auth", connectors[0].ID)
+		connURL.Path = s.absPath("/auth", url.PathEscape(connectors[0].ID))
 		http.Redirect(w, r, connURL.String(), http.StatusFound)
 	}
 
 	connectorInfos := make([]connectorInfo, len(connectors))
 	for index, conn := range connectors {
-		connURL.Path = s.absPath("/auth", conn.ID)
+		connURL.Path = s.absPath("/auth", url.PathEscape(conn.ID))
 		connectorInfos[index] = connectorInfo{
 			ID:   conn.ID,
 			Name: conn.Name,
 			Type: conn.Type,
-			URL:  connURL.String(),
+			URL:  template.URL(connURL.String()),
 		}
 	}
 
@@ -201,7 +203,13 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	connID := mux.Vars(r)["connector"]
+	connID, err := url.PathUnescape(mux.Vars(r)["connector"])
+	if err != nil {
+		s.logger.Errorf("Failed to parse connector: %v", err)
+		s.renderError(r, w, http.StatusBadRequest, "Requested resource does not exist")
+		return
+	}
+
 	conn, err := s.getConnector(connID)
 	if err != nil {
 		s.logger.Errorf("Failed to get connector: %v", err)
@@ -317,7 +325,12 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if connID := mux.Vars(r)["connector"]; connID != "" && connID != authReq.ConnectorID {
+	connID, err := url.PathUnescape(mux.Vars(r)["connector"])
+	if err != nil {
+		s.logger.Errorf("Failed to parse connector: %v", err)
+		s.renderError(r, w, http.StatusBadRequest, "Requested resource does not exist")
+		return
+	} else if connID != "" && connID != authReq.ConnectorID {
 		s.logger.Errorf("Connector mismatch: authentication started with id %q, but password login for id %q was triggered", authReq.ConnectorID, connID)
 		s.renderError(r, w, http.StatusInternalServerError, "Requested resource does not exist.")
 		return
@@ -402,7 +415,12 @@ func (s *Server) handleConnectorCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if connID := mux.Vars(r)["connector"]; connID != "" && connID != authReq.ConnectorID {
+	connID, err := url.PathUnescape(mux.Vars(r)["connector"])
+	if err != nil {
+		s.logger.Errorf("Failed to get connector with id %q : %v", authReq.ConnectorID, err)
+		s.renderError(r, w, http.StatusInternalServerError, "Requested resource does not exist.")
+		return
+	} else if connID != "" && connID != authReq.ConnectorID {
 		s.logger.Errorf("Connector mismatch: authentication started with id %q, but callback for id %q was triggered", authReq.ConnectorID, connID)
 		s.renderError(r, w, http.StatusInternalServerError, "Requested resource does not exist.")
 		return
@@ -482,7 +500,15 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 	s.logger.Infof("login successful: connector %q, username=%q, preferred_username=%q, email=%q, groups=%q",
 		authReq.ConnectorID, claims.Username, claims.PreferredUsername, email, claims.Groups)
 
-	returnURL := path.Join(s.issuerURL.Path, "/approval") + "?req=" + authReq.ID
+	// TODO: if s.skipApproval or !authReq.ForceApprovalPrompt, we can skip the redirect to /approval and go ahead and send code
+
+	// an HMAC is used here to ensure that the request ID is unpredictable, ensuring that an attacker who intercepted the original
+	// flow would be unable to poll for the result at the /approval endpoint
+	h := hmac.New(sha256.New, authReq.HMACKey)
+	h.Write([]byte(authReq.ID))
+	mac := h.Sum(nil)
+
+	returnURL := path.Join(s.issuerURL.Path, "/approval") + "?req=" + authReq.ID + "&hmac=" + base64.RawURLEncoding.EncodeToString(mac)
 	_, ok := conn.(connector.RefreshConnector)
 	if !ok {
 		return returnURL, nil
@@ -527,6 +553,17 @@ func (s *Server) finalizeLogin(identity connector.Identity, authReq storage.Auth
 }
 
 func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
+	macEncoded := r.FormValue("hmac")
+	if macEncoded == "" {
+		s.renderError(r, w, http.StatusUnauthorized, "Unauthorized request")
+		return
+	}
+	mac, err := base64.RawURLEncoding.DecodeString(macEncoded)
+	if err != nil {
+		s.renderError(r, w, http.StatusUnauthorized, "Unauthorized request")
+		return
+	}
+
 	authReq, err := s.storage.GetAuthRequest(r.FormValue("req"))
 	if err != nil {
 		s.logger.Errorf("Failed to get auth request: %v", err)
@@ -536,6 +573,16 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 	if !authReq.LoggedIn {
 		s.logger.Errorf("Auth request does not have an identity for approval")
 		s.renderError(r, w, http.StatusInternalServerError, "Login process not yet finalized.")
+		return
+	}
+
+	// build expected hmac with secret key
+	h := hmac.New(sha256.New, authReq.HMACKey)
+	h.Write([]byte(authReq.ID))
+	expectedMAC := h.Sum(nil)
+	// constant time comparison
+	if !hmac.Equal(mac, expectedMAC) {
+		s.renderError(r, w, http.StatusUnauthorized, "Unauthorized request")
 		return
 	}
 
