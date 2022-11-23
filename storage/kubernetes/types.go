@@ -436,6 +436,21 @@ type Password struct {
 	UserID   string `json:"userID,omitempty"`
 }
 
+// BlockedUser is a mirrored struct from the stroage with JSON struct tags and
+// Kubernetes type metadata.
+type InvalidLoginAttempt struct {
+	k8sapi.TypeMeta   `json:",inline"`
+	k8sapi.ObjectMeta `json:"metadata,omitempty"`
+
+	// The Kubernetes name is actually an encoded version of this value.
+	//
+	// This field is IMMUTABLE. Do not change.
+	UsernameConnID string `json:"username_conn_id,omitempty"`
+
+	InvalidLoginAttemptsCount int32     `json:"invalid_login_attempts_count,omitempty"`
+	UpdatedAt                 time.Time `json:"updated_at"`
+}
+
 // PasswordList is a list of Passwords.
 type PasswordList struct {
 	k8sapi.TypeMeta `json:",inline"`
@@ -467,6 +482,31 @@ func toStoragePassword(p Password) storage.Password {
 		Hash:     p.Hash,
 		Username: p.Username,
 		UserID:   p.UserID,
+	}
+}
+
+func (cli *client) fromStorageInvalidLoginAttempt(u storage.InvalidLoginAttempt) InvalidLoginAttempt {
+	username_conn_id := strings.ToLower(u.UsernameConnID)
+	return InvalidLoginAttempt{
+		TypeMeta: k8sapi.TypeMeta{
+			Kind:       kindInvalidLoginAttempt,
+			APIVersion: cli.apiVersion,
+		},
+		ObjectMeta: k8sapi.ObjectMeta{
+			Name:      cli.idToName(username_conn_id),
+			Namespace: cli.namespace,
+		},
+		UsernameConnID:            username_conn_id,
+		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
+		UpdatedAt:                 u.UpdatedAt,
+	}
+}
+
+func toStorageInvalidLoginAttempt(u InvalidLoginAttempt) storage.InvalidLoginAttempt {
+	return storage.InvalidLoginAttempt{
+		UsernameConnID:            u.UsernameConnID,
+		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
+		UpdatedAt:                 u.UpdatedAt,
 	}
 }
 

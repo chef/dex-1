@@ -14,16 +14,17 @@ import (
 )
 
 const (
-	clientPrefix         = "client/"
-	authCodePrefix       = "auth_code/"
-	refreshTokenPrefix   = "refresh_token/"
-	authRequestPrefix    = "auth_req/"
-	passwordPrefix       = "password/"
-	offlineSessionPrefix = "offline_session/"
-	connectorPrefix      = "connector/"
-	keysName             = "openid-connect-keys"
-	deviceRequestPrefix  = "device_req/"
-	deviceTokenPrefix    = "device_token/"
+	clientPrefix              = "client/"
+	authCodePrefix            = "auth_code/"
+	refreshTokenPrefix        = "refresh_token/"
+	authRequestPrefix         = "auth_req/"
+	passwordPrefix            = "password/"
+	InvalidLoginAttemptPrefix = "invalid_login_attempt/"
+	offlineSessionPrefix      = "offline_session/"
+	connectorPrefix           = "connector/"
+	keysName                  = "openid-connect-keys"
+	deviceRequestPrefix       = "device_req/"
+	deviceTokenPrefix         = "device_token/"
 
 	// defaultStorageTimeout will be applied to all storage's operations.
 	defaultStorageTimeout = 5 * time.Second
@@ -287,11 +288,24 @@ func (c *conn) CreatePassword(p storage.Password) error {
 	return c.txnCreate(ctx, passwordPrefix+strings.ToLower(p.Email), p)
 }
 
+func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.txnCreate(ctx, InvalidLoginAttemptPrefix+strings.ToLower(u.UsernameConnID), u)
+}
+
 func (c *conn) GetPassword(email string) (p storage.Password, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
 	err = c.getKey(ctx, keyEmail(passwordPrefix, email), &p)
 	return p, err
+}
+
+func (c *conn) GetInvalidLoginAttempt(username_conn_id string) (u storage.InvalidLoginAttempt, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, username_conn_id), &u)
+	return u, err
 }
 
 func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (storage.Password, error)) error {
@@ -312,10 +326,34 @@ func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (st
 	})
 }
 
+func (c *conn) UpdateInvalidLoginAttempt(username_conn_id string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id), func(currentValue []byte) ([]byte, error) {
+		var current storage.InvalidLoginAttempt
+		if len(currentValue) > 0 {
+			if err := json.Unmarshal(currentValue, &current); err != nil {
+				return nil, err
+			}
+		}
+		updated, err := updater(current)
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(updated)
+	})
+}
+
 func (c *conn) DeletePassword(email string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
 	return c.deleteKey(ctx, keyEmail(passwordPrefix, email))
+}
+
+func (c *conn) DeleteInvalidLoginAttempt(username_conn_id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
+	defer cancel()
+	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id))
 }
 
 func (c *conn) ListPasswords() (passwords []storage.Password, err error) {
@@ -562,8 +600,9 @@ func (c *conn) txnUpdate(ctx context.Context, key string, update func(current []
 	return nil
 }
 
-func keyID(prefix, id string) string       { return prefix + id }
-func keyEmail(prefix, email string) string { return prefix + strings.ToLower(email) }
+func keyID(prefix, id string) string             { return prefix + id }
+func keyEmail(prefix, email string) string       { return prefix + strings.ToLower(email) }
+func keyUsername(prefix, username string) string { return prefix + strings.ToLower(username) }
 func keySession(userID, connID string) string {
 	return offlineSessionPrefix + strings.ToLower(userID+"|"+connID)
 }
