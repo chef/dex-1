@@ -15,6 +15,11 @@ import (
 	"github.com/dexidp/dex/storage/ent/db/migrate"
 )
 
+func (*Database) GetInvalidLoginAttempt(username_conn_id string) (storage.InvalidLoginAttempt, error)
+func (*Database) CreateInvalidLoginAttempt(client storage.InvalidLoginAttempt) error
+func (*Database) DeleteInvalidLoginAttempt(username_conn_id string) error
+func (*Database) UpdateInvalidLoginAttempt(username_conn_id string, updater func(storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error
+
 var _ storage.Storage = (*Database)(nil)
 
 type Database struct {
