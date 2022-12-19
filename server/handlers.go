@@ -1052,7 +1052,7 @@ func (s *Server) handleAuthCode(w http.ResponseWriter, r *http.Request, client s
 	s.writeAccessToken(w, tokenResponse)
 }
 
-func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCode, client storage.Client) (*accessTokenReponse, error) {
+func (s *Server) exchangeAuthCode(w http.ResponseWriter, authCode storage.AuthCode, client storage.Client) (*accessTokenResponse, error) {
 	if !s.validateBase32EncodedId(authCode.ID) {
 		s.logger.Errorf("Invalid auth code")
 		s.tokenErrHelper(w, errInvalidRequest, "Invalid auth code passed", http.StatusBadRequest)
