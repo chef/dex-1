@@ -512,7 +512,7 @@ func (s *Server) handleConnectorLogin(w http.ResponseWriter, r *http.Request) {
 				    <input type="hidden" name="SAMLRequest" value="%s" />
 				    <input type="hidden" name="RelayState" value="%s" />
 			    </form>
-				<script>
+				<script nonce="**CSP_NONCE**">
 				    document.forms[0].submit();
 				</script>
 			  </body>
