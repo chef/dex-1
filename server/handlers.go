@@ -19,7 +19,7 @@ import (
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/gorilla/mux"
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 
 	"github.com/dexidp/dex/connector"
 	"github.com/dexidp/dex/server/internal"
