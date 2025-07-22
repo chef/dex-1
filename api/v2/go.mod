@@ -1,6 +1,6 @@
 module github.com/dexidp/dex/api/v2
 
-go 1.24.4
+go 1.24.3
 
 require (
 	github.com/golang/protobuf v1.3.2
