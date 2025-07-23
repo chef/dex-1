@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -73,12 +72,11 @@ func dirExists(dir string) error {
 //
 // The directory layout is expected to be:
 //
-//    ( web directory )
-//    |- static
-//    |- themes
-//    |  |- (theme name)
-//    |- templates
-//
+//	( web directory )
+//	|- static
+//	|- themes
+//	|  |- (theme name)
+//	|- templates
 func loadWebConfig(c webConfig) (http.Handler, http.Handler, *templates, error) {
 	if c.theme == "" {
 		c.theme = "coreos"
@@ -116,7 +114,7 @@ func loadWebConfig(c webConfig) (http.Handler, http.Handler, *templates, error) 
 
 // loadTemplates parses the expected templates from the provided directory.
 func loadTemplates(c webConfig, templatesDir string) (*templates, error) {
-	files, err := ioutil.ReadDir(templatesDir)
+	files, err := os.ReadDir(templatesDir)
 	if err != nil {
 		return nil, fmt.Errorf("read dir: %v", err)
 	}

@@ -13,7 +13,6 @@ import (
 	"hash"
 	"hash/fnv"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -127,7 +126,7 @@ func checkHTTPErr(r *http.Response, validStatusCodes ...int) error {
 		}
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 2<<15)) // 64 KiB
+	body, err := io.ReadAll(io.LimitReader(r.Body, 2<<15)) // 64 KiB
 	if err != nil {
 		return fmt.Errorf("read response body: %v", err)
 	}
@@ -151,7 +150,7 @@ func checkHTTPErr(r *http.Response, validStatusCodes ...int) error {
 // Close the response body. The initial request is drained so the connection can
 // be reused.
 func closeResp(r *http.Response) {
-	io.Copy(ioutil.Discard, r.Body)
+	io.Copy(io.Discard, r.Body)
 	r.Body.Close()
 }
 
@@ -276,7 +275,7 @@ func newClient(cluster k8sapi.Cluster, user k8sapi.AuthInfo, namespace string, l
 		if file == "" {
 			return nil, nil
 		}
-		return ioutil.ReadFile(file)
+		return os.ReadFile(file)
 	}
 
 	if caData, err := data(cluster.CertificateAuthorityData, cluster.CertificateAuthority); err != nil {
@@ -378,7 +377,7 @@ func (t transport) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 func loadKubeConfig(kubeConfigPath string) (cluster k8sapi.Cluster, user k8sapi.AuthInfo, namespace string, err error) {
-	data, err := ioutil.ReadFile(kubeConfigPath)
+	data, err := os.ReadFile(kubeConfigPath)
 	if err != nil {
 		err = fmt.Errorf("read %s: %v", kubeConfigPath, err)
 		return
@@ -436,7 +435,7 @@ func inClusterConfig() (cluster k8sapi.Cluster, user k8sapi.AuthInfo, namespace 
 		Server:               "https://" + host + ":" + port,
 		CertificateAuthority: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
 	}
-	token, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	token, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	if err != nil {
 		return
 	}

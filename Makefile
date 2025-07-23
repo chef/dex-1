@@ -18,7 +18,7 @@ export GOBIN=$(PWD)/bin
 LD_FLAGS="-w -X $(REPO_PATH)/version.Version=$(VERSION)"
 
 # Dependency versions
-GOLANGCI_VERSION = 1.32.2
+GOLANGCI_VERSION   = 1.64.5
 
 build: bin/dex
 
@@ -61,12 +61,18 @@ bin/test/etcd:
 
 bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
 	@ln -sf golangci-lint-${GOLANGCI_VERSION} bin/golangci-lint
+
 bin/golangci-lint-${GOLANGCI_VERSION}:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
-	@mv bin/golangci-lint $@
+    curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
+	@mkdir -p bin
+
+bin/golangci-lint:
+	@mkdir -p bin
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- v${GOLANGCI_VERSION}
+
 
 .PHONY: lint
-lint: bin/golangci-lint ## Run linter
+lint: bin/golangci-lint version
 	bin/golangci-lint run
 
 .PHONY: fix

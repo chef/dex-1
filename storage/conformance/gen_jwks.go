@@ -13,8 +13,8 @@ import (
 	"encoding/json"
 	"go/format"
 	"io"
-	"io/ioutil"
 	"log"
+	"os"
 	"text/template"
 
 	jose "gopkg.in/go-jose/go-jose.v2"
@@ -105,7 +105,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("gofmt failed: %v", err)
 	}
-	if err := ioutil.WriteFile("jwks.go", out, 0644); err != nil {
+	if err := os.WriteFile("jwks.go", out, 0644); err != nil {
 		log.Fatal(err)
 	}
 }

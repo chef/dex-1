@@ -271,7 +271,7 @@ func TestStaticBlockedUsers(t *testing.T) {
 			name: "update non-static InvalidLoginAttempt",
 			action: func() error {
 				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
-					u.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount + 1
+					u.InvalidLoginAttemptsCount++
 					u.UpdatedAt = time.Now()
 					return u, nil
 				}

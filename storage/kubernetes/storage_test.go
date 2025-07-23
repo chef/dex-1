@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -64,7 +63,7 @@ func (s *StorageTestSuite) TearDownSuite() {
 }
 
 func (s *StorageTestSuite) SetupTest() {
-	f, err := ioutil.TempFile("", "dex-kubeconfig-*")
+	f, err := os.CreateTemp("", "dex-kubeconfig-*")
 	s.Require().NoError(err)
 	defer f.Close()
 
