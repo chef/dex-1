@@ -62,7 +62,7 @@ func (c *Config) Open(id string, logger log.Logger) (conn connector.Connector, e
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wellKnownURL := strings.TrimSuffix(c.Issuer, "/") + "/.well-known/oauth-authorization-server"
-	req, err := http.NewRequest(http.MethodGet, wellKnownURL, nil)
+	req, err := http.NewRequest(http.MethodGet, wellKnownURL, nil) //nolint
 
 	openshiftConnector := openshiftConnector{
 		apiURL:       c.Issuer,

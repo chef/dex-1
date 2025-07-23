@@ -936,7 +936,8 @@ func runTests(t *testing.T, schema string, connMethod connectionMethod, config *
 	defer os.Remove(tempDir)
 
 	schemaPath := filepath.Join(tempDir, "schema.ldif")
-	if err := os.WriteFile(schemaPath, []byte(schema), 0777); err != nil {
+
+	if err := os.WriteFile(schemaPath, []byte(schema), 0777); err != nil { //nolint
 		t.Fatal(err)
 	}
 

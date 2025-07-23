@@ -187,17 +187,17 @@ func WithStaticInvalidLoginAttempt(s Storage, staticInvalidLoginAttempt []Invali
 	return staticInvalidLoginAttemptStorage{s, staticInvalidLoginAttempt, InvalidLoginAttemptByUsernameConnID, logger}
 }
 
-func (s staticInvalidLoginAttemptStorage) isStatic(username_conn_id string) bool {
-	_, ok := s.InvalidLoginAttemptByUsernameConnID[strings.ToLower(username_conn_id)]
+func (s staticInvalidLoginAttemptStorage) isStatic(usernameConnID string) bool {
+	_, ok := s.InvalidLoginAttemptByUsernameConnID[strings.ToLower(usernameConnID)]
 	return ok
 }
 
-func (s staticInvalidLoginAttemptStorage) GetBlockedUser(username_conn_id string) (InvalidLoginAttempt, error) {
-	username_conn_id = strings.ToLower(username_conn_id)
-	if username_conn_id, ok := s.InvalidLoginAttemptByUsernameConnID[username_conn_id]; ok {
-		return username_conn_id, nil
+func (s staticInvalidLoginAttemptStorage) GetBlockedUser(usernameConnID string) (InvalidLoginAttempt, error) {
+	usernameConnID = strings.ToLower(usernameConnID)
+	if usernameConnID, ok := s.InvalidLoginAttemptByUsernameConnID[usernameConnID]; ok {
+		return usernameConnID, nil
 	}
-	return s.Storage.GetInvalidLoginAttempt(username_conn_id)
+	return s.Storage.GetInvalidLoginAttempt(usernameConnID)
 }
 
 func (s staticInvalidLoginAttemptStorage) CreateInvalidLoginAttempt(u InvalidLoginAttempt) error {
@@ -207,18 +207,18 @@ func (s staticInvalidLoginAttemptStorage) CreateInvalidLoginAttempt(u InvalidLog
 	return s.Storage.CreateInvalidLoginAttempt(u)
 }
 
-func (s staticInvalidLoginAttemptStorage) DeleteInvalidLoginAttempt(username_conn_id string) error {
-	if s.isStatic(username_conn_id) {
+func (s staticInvalidLoginAttemptStorage) DeleteInvalidLoginAttempt(usernameConnID string) error {
+	if s.isStatic(usernameConnID) {
 		return errors.New("static username_conn_id: read-only cannot delete InvalidLoginAttempt")
 	}
-	return s.Storage.DeleteInvalidLoginAttempt(username_conn_id)
+	return s.Storage.DeleteInvalidLoginAttempt(usernameConnID)
 }
 
-func (s staticInvalidLoginAttemptStorage) UpdateInvalidLoginAttempt(username_conn_id string, updater func(old InvalidLoginAttempt) (InvalidLoginAttempt, error)) error {
-	if s.isStatic(username_conn_id) {
+func (s staticInvalidLoginAttemptStorage) UpdateInvalidLoginAttempt(usernameConnID string, updater func(old InvalidLoginAttempt) (InvalidLoginAttempt, error)) error {
+	if s.isStatic(usernameConnID) {
 		return errors.New("static username_conn_id: read-only cannot update InvalidLoginAttempt")
 	}
-	return s.Storage.UpdateInvalidLoginAttempt(username_conn_id, updater)
+	return s.Storage.UpdateInvalidLoginAttempt(usernameConnID, updater)
 }
 
 // staticConnectorsStorage represents a storage with read-only set of connectors.

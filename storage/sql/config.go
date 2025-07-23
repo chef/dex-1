@@ -31,7 +31,7 @@ const (
 	mysqlErrUnknownSysVar       = 1193
 )
 
-// nolint
+//nolint:staticheck
 const (
 	// postgres SSL modes
 	pgSSLDisable    = "disable"
@@ -40,7 +40,7 @@ const (
 	pgSSLVerifyFull = "verify-full"
 )
 
-// nolint
+//nolint:sql
 const (
 	// MySQL SSL modes
 	mysqlSSLTrue       = "true"

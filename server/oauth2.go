@@ -89,7 +89,7 @@ func tokenErr(w http.ResponseWriter, typ, description string, statusCode int) er
 	return nil
 }
 
-// nolint
+//nolint:server
 const (
 	errInvalidRequest          = "invalid_request"
 	errUnauthorizedClient      = "unauthorized_client"

@@ -91,7 +91,7 @@ type Storage interface {
 	GetConnector(id string) (Connector, error)
 	GetDeviceRequest(userCode string) (DeviceRequest, error)
 	GetDeviceToken(deviceCode string) (DeviceToken, error)
-	GetInvalidLoginAttempt(username_conn_id string) (InvalidLoginAttempt, error)
+	GetInvalidLoginAttempt(usernameConnID string) (InvalidLoginAttempt, error)
 
 	ListClients() ([]Client, error)
 	ListRefreshTokens() ([]RefreshToken, error)
@@ -104,7 +104,7 @@ type Storage interface {
 	DeleteClient(id string) error
 	DeleteRefresh(id string) error
 	DeletePassword(email string) error
-	DeleteInvalidLoginAttempt(username_conn_id string) error
+	DeleteInvalidLoginAttempt(usernameConnID string) error
 	DeleteOfflineSessions(userID string, connID string) error
 	DeleteConnector(id string) error
 
@@ -127,7 +127,7 @@ type Storage interface {
 	UpdateAuthRequest(id string, updater func(a AuthRequest) (AuthRequest, error)) error
 	UpdateRefreshToken(id string, updater func(r RefreshToken) (RefreshToken, error)) error
 	UpdatePassword(email string, updater func(p Password) (Password, error)) error
-	UpdateInvalidLoginAttempt(username_conn_id string, updater func(u InvalidLoginAttempt) (InvalidLoginAttempt, error)) error
+	UpdateInvalidLoginAttempt(usernameConnID string, updater func(u InvalidLoginAttempt) (InvalidLoginAttempt, error)) error
 	UpdateOfflineSessions(userID string, connID string, updater func(s OfflineSessions) (OfflineSessions, error)) error
 	UpdateConnector(id string, updater func(c Connector) (Connector, error)) error
 	UpdateDeviceToken(deviceCode string, updater func(t DeviceToken) (DeviceToken, error)) error

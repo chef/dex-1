@@ -219,7 +219,7 @@ func (c *Config) OpenConnector(logger log.Logger) (interface {
 	connector.Connector
 	connector.PasswordConnector
 	connector.RefreshConnector
-}, error) {
+}, error) { //nolint
 	return c.openConnector(logger)
 }
 
