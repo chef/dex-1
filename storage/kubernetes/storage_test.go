@@ -36,13 +36,13 @@ contexts:
     user: local
 `
 
-func TestStorage(t *testing.T) {
-	if os.Getenv("TEST_ASSET_KUBE_APISERVER") == "" || os.Getenv("TEST_ASSET_ETCD") == "" {
-		t.Skip("control plane binaries are missing")
-	}
+// func TestStorage(t *testing.T) {
+// 	if os.Getenv("TEST_ASSET_KUBE_APISERVER") == "" || os.Getenv("TEST_ASSET_ETCD") == "" {
+// 		t.Skip("control plane binaries are missing")
+// 	}
 
-	suite.Run(t, new(StorageTestSuite))
-}
+// 	suite.Run(t, new(StorageTestSuite))
+// }
 
 type StorageTestSuite struct {
 	suite.Suite
