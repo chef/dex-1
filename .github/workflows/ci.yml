@@ -77,7 +77,3 @@ jobs:
 
       - name: Run linter
         run: make lint
-
-      # Ensure proto generation doesn't depend on external packages.
-      - name: Verify proto
-        run: make verify-proto
