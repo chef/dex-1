@@ -297,10 +297,10 @@ func (c *conn) GetPassword(email string) (p storage.Password, err error) {
 	return p, err
 }
 
-func (c *conn) GetInvalidLoginAttempt(username_conn_id string) (u storage.InvalidLoginAttempt, err error) {
+func (c *conn) GetInvalidLoginAttempt(usernameConnID string) (u storage.InvalidLoginAttempt, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, username_conn_id), &u)
+	err = c.getKey(ctx, keyUsername(InvalidLoginAttemptPrefix, usernameConnID), &u)
 	return u, err
 }
 
@@ -322,10 +322,10 @@ func (c *conn) UpdatePassword(email string, updater func(p storage.Password) (st
 	})
 }
 
-func (c *conn) UpdateInvalidLoginAttempt(username_conn_id string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+func (c *conn) UpdateInvalidLoginAttempt(usernameConnID string, updater func(p storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id), func(currentValue []byte) ([]byte, error) {
+	return c.txnUpdate(ctx, keyEmail(InvalidLoginAttemptPrefix, usernameConnID), func(currentValue []byte) ([]byte, error) {
 		var current storage.InvalidLoginAttempt
 		if len(currentValue) > 0 {
 			if err := json.Unmarshal(currentValue, &current); err != nil {
@@ -346,10 +346,10 @@ func (c *conn) DeletePassword(email string) error {
 	return c.deleteKey(ctx, keyEmail(passwordPrefix, email))
 }
 
-func (c *conn) DeleteInvalidLoginAttempt(username_conn_id string) error {
+func (c *conn) DeleteInvalidLoginAttempt(usernameConnID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStorageTimeout)
 	defer cancel()
-	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, username_conn_id))
+	return c.deleteKey(ctx, keyEmail(InvalidLoginAttemptPrefix, usernameConnID))
 }
 
 func (c *conn) ListPasswords() (passwords []storage.Password, err error) {

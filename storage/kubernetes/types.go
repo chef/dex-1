@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 
 	"github.com/dexidp/dex/storage"
 	"github.com/dexidp/dex/storage/kubernetes/k8sapi"
@@ -428,17 +428,17 @@ func toStoragePassword(p Password) storage.Password {
 }
 
 func (cli *client) fromStorageInvalidLoginAttempt(u storage.InvalidLoginAttempt) InvalidLoginAttempt {
-	username_conn_id := strings.ToLower(u.UsernameConnID)
+	usernameConnID := strings.ToLower(u.UsernameConnID)
 	return InvalidLoginAttempt{
 		TypeMeta: k8sapi.TypeMeta{
 			Kind:       kindInvalidLoginAttempt,
 			APIVersion: cli.apiVersion,
 		},
 		ObjectMeta: k8sapi.ObjectMeta{
-			Name:      cli.idToName(username_conn_id),
+			Name:      cli.idToName(usernameConnID),
 			Namespace: cli.namespace,
 		},
-		UsernameConnID:            username_conn_id,
+		UsernameConnID:            usernameConnID,
 		InvalidLoginAttemptsCount: u.InvalidLoginAttemptsCount,
 		UpdatedAt:                 u.UpdatedAt,
 	}

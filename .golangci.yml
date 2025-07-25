@@ -14,17 +14,14 @@ linters:
     disable-all: true
     enable:
         - bodyclose
-        - deadcode
         - dogsled
         - exhaustive
-        - exportloopref
         - gci
         - gochecknoinits
         - gocritic
         - gofmt
         - gofumpt
         - goimports
-        - golint
         - goprintffuncname
         - gosimple
         - govet
@@ -34,13 +31,11 @@ linters:
         - nolintlint
         - rowserrcheck
         - staticcheck
-        - structcheck
         - stylecheck
         - tparallel
         - typecheck
         - unconvert
         - unused
-        - varcheck
         - whitespace
 
         # TODO: fix linter errors before enabling

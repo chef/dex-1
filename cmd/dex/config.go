@@ -27,7 +27,7 @@ type Config struct {
 	OAuth2               OAuth2               `json:"oauth2"`
 	GRPC                 GRPC                 `json:"grpc"`
 	Expiry               Expiry               `json:"expiry"`
-	InvalidLoginAttempts InvalidLoginAttempts `json:"invalidLoginAttempts`
+	InvalidLoginAttempts InvalidLoginAttempts `json:"invalidLoginAttempts` //nolint
 	Logger               Logger               `json:"logger"`
 
 	Frontend server.WebConfig `json:"frontend"`

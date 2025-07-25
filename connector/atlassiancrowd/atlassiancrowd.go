@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -25,18 +24,17 @@ import (
 //
 // An example config:
 //
-//     type: atlassian-crowd
-//     config:
-//       baseURL: https://crowd.example.com/context
-//       clientID: applogin
-//       clientSecret: appP4$$w0rd
-//       # users can be restricted by a list of groups
-//       groups:
-//       - admin
-//       # Prompt for username field
-//       usernamePrompt: Login
-//		 preferredUsernameField: name
-//
+//	    type: atlassian-crowd
+//	    config:
+//	      baseURL: https://crowd.example.com/context
+//	      clientID: applogin
+//	      clientSecret: appP4$$w0rd
+//	      # users can be restricted by a list of groups
+//	      groups:
+//	      - admin
+//	      # Prompt for username field
+//	      usernamePrompt: Login
+//			 preferredUsernameField: name
 type Config struct {
 	BaseURL      string   `json:"baseURL"`
 	ClientID     string   `json:"clientID"`
@@ -438,7 +436,7 @@ func (c *crowdConnector) crowdUserManagementRequest(ctx context.Context, method 
 
 // validateCrowdResponse validates unique not JSON responses from API
 func (c *crowdConnector) validateCrowdResponse(resp *http.Response) ([]byte, error) {
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("crowd: read user body: %v", err)
 	}

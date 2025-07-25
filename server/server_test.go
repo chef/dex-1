@@ -8,7 +8,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -27,7 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 
 	"github.com/dexidp/dex/connector"
 	"github.com/dexidp/dex/connector/mock"
@@ -1508,7 +1508,7 @@ func TestOAuth2DeviceFlow(t *testing.T) {
 				t.Errorf("Could not request device code: %v", err)
 			}
 			defer resp.Body.Close()
-			responseBody, err := ioutil.ReadAll(resp.Body)
+			responseBody, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("Could read device code response %v", err)
 			}
@@ -1532,7 +1532,7 @@ func TestOAuth2DeviceFlow(t *testing.T) {
 				t.Errorf("Error Posting Form: %v", err)
 			}
 			defer resp.Body.Close()
-			responseBody, err = ioutil.ReadAll(resp.Body)
+			responseBody, err = io.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("Could read verification response %v", err)
 			}
@@ -1551,7 +1551,7 @@ func TestOAuth2DeviceFlow(t *testing.T) {
 				t.Errorf("Could not request device token: %v", err)
 			}
 			defer resp.Body.Close()
-			responseBody, err = ioutil.ReadAll(resp.Body)
+			responseBody, err = io.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("Could read device token response %v", err)
 			}

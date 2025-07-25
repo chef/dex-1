@@ -225,6 +225,9 @@ func TestStaticBlockedUsers(t *testing.T) {
 	u4 := storage.InvalidLoginAttempt{UsernameConnID: "Spam_secret:ldap", InvalidLoginAttemptsCount: 5}
 
 	backing.CreateInvalidLoginAttempt(u1)
+	backing.CreateInvalidLoginAttempt(u2)
+	backing.CreateInvalidLoginAttempt(u3)
+	backing.CreateInvalidLoginAttempt(u4)
 	s := storage.WithStaticInvalidLoginAttempt(backing, []storage.InvalidLoginAttempt{u2}, logger)
 
 	tests := []struct {
@@ -268,7 +271,7 @@ func TestStaticBlockedUsers(t *testing.T) {
 			name: "update non-static InvalidLoginAttempt",
 			action: func() error {
 				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
-					u.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount + 1
+					u.InvalidLoginAttemptsCount++
 					u.UpdatedAt = time.Now()
 					return u, nil
 				}
