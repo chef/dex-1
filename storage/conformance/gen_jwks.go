@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 // This file is used to generate static JWKs for tests.
@@ -12,11 +13,11 @@ import (
 	"encoding/json"
 	"go/format"
 	"io"
-	"io/ioutil"
 	"log"
+	"os"
 	"text/template"
 
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 )
 
 func newUUID() string {
@@ -36,7 +37,7 @@ var tmpl = template.Must(template.New("jwks.go").Parse(`
 
 package conformance
 
-import jose "gopkg.in/square/go-jose.v2"
+import jose "gopkg.in/go-jose/go-jose.v2"
 
 type keyPair struct {
 	Public  *jose.JSONWebKey
@@ -104,7 +105,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("gofmt failed: %v", err)
 	}
-	if err := ioutil.WriteFile("jwks.go", out, 0644); err != nil {
+	if err := os.WriteFile("jwks.go", out, 0644); err != nil {
 		log.Fatal(err)
 	}
 }

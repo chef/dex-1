@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -55,7 +54,7 @@ func serve(cmd *cobra.Command, args []string) error {
 	}
 
 	configFile := args[0]
-	configData, err := ioutil.ReadFile(configFile)
+	configData, err := os.ReadFile(configFile)
 	if err != nil {
 		return fmt.Errorf("failed to read config file %s: %v", configFile, err)
 	}
@@ -79,12 +78,12 @@ func serve(cmd *cobra.Command, args []string) error {
 	logger.Infof("config issuer: %s", c.Issuer)
 
 	prometheusRegistry := prometheus.NewRegistry()
-	err = prometheusRegistry.Register(prometheus.NewGoCollector())
+	err = prometheusRegistry.Register(prometheus.NewGoCollector()) //nolint
 	if err != nil {
 		return fmt.Errorf("failed to register Go runtime metrics: %v", err)
 	}
 
-	err = prometheusRegistry.Register(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	err = prometheusRegistry.Register(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{})) //nolint
 	if err != nil {
 		return fmt.Errorf("failed to register process metrics: %v", err)
 	}
@@ -125,7 +124,7 @@ func serve(cmd *cobra.Command, args []string) error {
 		if c.GRPC.TLSClientCA != "" {
 			// Parse certificates from client CA file to a new CertPool.
 			cPool := x509.NewCertPool()
-			clientCert, err := ioutil.ReadFile(c.GRPC.TLSClientCA)
+			clientCert, err := os.ReadFile(c.GRPC.TLSClientCA)
 			if err != nil {
 				return fmt.Errorf("invalid config: reading from client CA file: %v", err)
 			}
@@ -261,6 +260,13 @@ func serve(cmd *cobra.Command, args []string) error {
 		logger.Infof("config id tokens valid for: %v", idTokens)
 		serverConfig.IDTokensValidFor = idTokens
 	}
+
+	if c.InvalidLoginAttempts.EnableInvalidLoginAttempts {
+		serverConfig.EnableInvalidLoginAttempts = c.InvalidLoginAttempts.EnableInvalidLoginAttempts
+		serverConfig.BlockedDurationInMinutes = c.InvalidLoginAttempts.BlockedDurationInMinutes
+		serverConfig.MaxInvalidLoginAttemptsAllowed = c.InvalidLoginAttempts.MaxInvalidLoginAttemptsAllowed
+	}
+
 	if c.Expiry.AuthRequests != "" {
 		authRequests, err := time.ParseDuration(c.Expiry.AuthRequests)
 		if err != nil {

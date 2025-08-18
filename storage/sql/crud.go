@@ -21,19 +21,18 @@ const keysRowID = "keys"
 // encoder wraps the underlying value in a JSON marshaler which is automatically
 // called by the database/sql package.
 //
-//		s := []string{"planes", "bears"}
-//		err := db.Exec(`insert into t1 (id, things) values (1, $1)`, encoder(s))
-//		if err != nil {
-//			// handle error
-//		}
+//	s := []string{"planes", "bears"}
+//	err := db.Exec(`insert into t1 (id, things) values (1, $1)`, encoder(s))
+//	if err != nil {
+//		// handle error
+//	}
 //
-//		var r []byte
-//		err = db.QueryRow(`select things from t1 where id = 1;`).Scan(&r)
-//		if err != nil {
-//			// handle error
-//		}
-//		fmt.Printf("%s\n", r) // ["planes","bears"]
-//
+//	var r []byte
+//	err = db.QueryRow(`select things from t1 where id = 1;`).Scan(&r)
+//	if err != nil {
+//		// handle error
+//	}
+//	fmt.Printf("%s\n", r) // ["planes","bears"]
 func encoder(i interface{}) driver.Valuer {
 	return jsonEncoder{i}
 }
@@ -516,6 +515,32 @@ func (c *conn) UpdateClient(id string, updater func(old storage.Client) (storage
 	})
 }
 
+func (c *conn) UpdateInvalidLoginAttempt(usernameConnID string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+	return c.ExecTx(func(tx *trans) error {
+		u, err := getInvalidLoginAttempt(tx, usernameConnID)
+		if err != nil {
+			return err
+		}
+		nu, err := updater(u)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(`
+			update invalid_login_attempts
+			set
+				invalid_login_attempts_count = $1,
+				updated_at = $2
+			where username_conn_id = $3;
+		`, nu.InvalidLoginAttemptsCount, nu.UpdatedAt, usernameConnID,
+		)
+		if err != nil {
+			return fmt.Errorf("update invalid_login_attempts: %v", err)
+		}
+		return nil
+	})
+}
+
 func (c *conn) CreateClient(cli storage.Client) error {
 	_, err := c.Exec(`
 		insert into client (
@@ -531,6 +556,24 @@ func (c *conn) CreateClient(cli storage.Client) error {
 			return storage.ErrAlreadyExists
 		}
 		return fmt.Errorf("insert client: %v", err)
+	}
+	return nil
+}
+
+func (c *conn) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
+	_, err := c.Exec(`
+		insert into invalid_login_attempts (
+			username_conn_id, invalid_login_attempts_count, updated_at
+		)
+		values ($1, $2, $3);
+	`,
+		strings.ToLower(u.UsernameConnID), u.InvalidLoginAttemptsCount, u.UpdatedAt,
+	)
+	if err != nil {
+		if c.alreadyExistsCheck(err) {
+			return storage.ErrAlreadyExists
+		}
+		return fmt.Errorf("insert into invalid_login_attempts: %v", err)
 	}
 	return nil
 }
@@ -635,6 +678,22 @@ func (c *conn) GetPassword(email string) (storage.Password, error) {
 	return getPassword(c, email)
 }
 
+func (c *conn) GetInvalidLoginAttempt(usernameConnID string) (storage.InvalidLoginAttempt, error) {
+	u, err := getInvalidLoginAttempt(c, usernameConnID)
+	if err == storage.ErrNotFound {
+		return u, nil
+	}
+	return u, err
+}
+
+func getInvalidLoginAttempt(q querier, usernameConnID string) (u storage.InvalidLoginAttempt, err error) {
+	return scanInvalidLoginAttempt(q.QueryRow(`
+	select
+	username_conn_id, invalid_login_attempts_count, updated_at
+	from invalid_login_attempts where username_conn_id = $1;
+	`, strings.ToLower(usernameConnID)))
+}
+
 func getPassword(q querier, email string) (p storage.Password, err error) {
 	return scanPassword(q.QueryRow(`
 		select
@@ -678,6 +737,19 @@ func scanPassword(s scanner) (p storage.Password, err error) {
 		return p, fmt.Errorf("select password: %v", err)
 	}
 	return p, nil
+}
+
+func scanInvalidLoginAttempt(s scanner) (u storage.InvalidLoginAttempt, err error) {
+	err = s.Scan(
+		&u.UsernameConnID, &u.InvalidLoginAttemptsCount, &u.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return u, storage.ErrNotFound
+		}
+		return u, fmt.Errorf("select InvalidLoginAttempt: %v", err)
+	}
+	return u, nil
 }
 
 func (c *conn) CreateOfflineSessions(s storage.OfflineSessions) error {
@@ -858,6 +930,11 @@ func (c *conn) DeleteRefresh(id string) error     { return c.delete("refresh_tok
 func (c *conn) DeletePassword(email string) error {
 	return c.delete("password", "email", strings.ToLower(email))
 }
+
+func (c *conn) DeleteInvalidLoginAttempt(usernameConnID string) error {
+	return c.delete("invalid_login_attempts", "username_conn_id", strings.ToLower(usernameConnID))
+}
+
 func (c *conn) DeleteConnector(id string) error { return c.delete("connector", "id", id) }
 
 func (c *conn) DeleteOfflineSessions(userID string, connID string) error {
@@ -991,7 +1068,7 @@ func (c *conn) UpdateDeviceToken(deviceCode string, updater func(old storage.Dev
 		_, err = tx.Exec(`
 			update device_token
 			set
-				status = $1, 
+				status = $1,
 				token = $2,
 				last_request = $3,
 				poll_interval = $4

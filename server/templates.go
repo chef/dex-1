@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -72,12 +72,11 @@ func dirExists(dir string) error {
 //
 // The directory layout is expected to be:
 //
-//    ( web directory )
-//    |- static
-//    |- themes
-//    |  |- (theme name)
-//    |- templates
-//
+//	( web directory )
+//	|- static
+//	|- themes
+//	|  |- (theme name)
+//	|- templates
 func loadWebConfig(c webConfig) (http.Handler, http.Handler, *templates, error) {
 	if c.theme == "" {
 		c.theme = "coreos"
@@ -115,7 +114,7 @@ func loadWebConfig(c webConfig) (http.Handler, http.Handler, *templates, error) 
 
 // loadTemplates parses the expected templates from the provided directory.
 func loadTemplates(c webConfig, templatesDir string) (*templates, error) {
-	files, err := ioutil.ReadDir(templatesDir)
+	files, err := os.ReadDir(templatesDir)
 	if err != nil {
 		return nil, fmt.Errorf("read dir: %v", err)
 	}
@@ -284,15 +283,20 @@ func (t *templates) login(r *http.Request, w http.ResponseWriter, connectors []c
 	return renderTemplate(w, t.loginTmpl, data)
 }
 
-func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool) error {
+func (t *templates) password(r *http.Request, w http.ResponseWriter, postURL, lastUsername, usernamePrompt string, lastWasInvalid, showBacklink bool, invalidLoginAttemptsCount int32, maxInvalidLoginAttemptsAllowed int32, blockedDurationInMinutes int32, enableInvalidLoginAttempts bool, invalidLoginAttemptUpdatedAt time.Time) error {
 	data := struct {
-		PostURL        string
-		BackLink       bool
-		Username       string
-		UsernamePrompt string
-		Invalid        bool
-		ReqPath        string
-	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path}
+		PostURL                        string
+		BackLink                       bool
+		Username                       string
+		UsernamePrompt                 string
+		Invalid                        bool
+		ReqPath                        string
+		InvalidLoginAttemptsCount      int32
+		MaxInvalidLoginAttemptsAllowed int32
+		BlockedDurationInMinutes       int32
+		EnableInvalidLoginAttempts     bool
+		InvalidLoginAttemptUpdatedAt   time.Time
+	}{postURL, showBacklink, lastUsername, usernamePrompt, lastWasInvalid, r.URL.Path, invalidLoginAttemptsCount, maxInvalidLoginAttemptsAllowed, blockedDurationInMinutes, enableInvalidLoginAttempts, invalidLoginAttemptUpdatedAt}
 	return renderTemplate(w, t.passwordTmpl, data)
 }
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 )
 
 var (
@@ -55,6 +55,12 @@ type GCResult struct {
 	DeviceTokens   int64
 }
 
+type InvalidLoginAttempt struct {
+	UsernameConnID            string
+	InvalidLoginAttemptsCount int32
+	UpdatedAt                 time.Time
+}
+
 // Storage is the storage interface used by the server. Implementations are
 // required to be able to perform atomic compare-and-swap updates and either
 // support timezones or standardize on UTC.
@@ -67,6 +73,7 @@ type Storage interface {
 	CreateAuthCode(c AuthCode) error
 	CreateRefresh(r RefreshToken) error
 	CreatePassword(p Password) error
+	CreateInvalidLoginAttempt(u InvalidLoginAttempt) error
 	CreateOfflineSessions(s OfflineSessions) error
 	CreateConnector(c Connector) error
 	CreateDeviceRequest(d DeviceRequest) error
@@ -84,6 +91,7 @@ type Storage interface {
 	GetConnector(id string) (Connector, error)
 	GetDeviceRequest(userCode string) (DeviceRequest, error)
 	GetDeviceToken(deviceCode string) (DeviceToken, error)
+	GetInvalidLoginAttempt(usernameConnID string) (InvalidLoginAttempt, error)
 
 	ListClients() ([]Client, error)
 	ListRefreshTokens() ([]RefreshToken, error)
@@ -96,6 +104,7 @@ type Storage interface {
 	DeleteClient(id string) error
 	DeleteRefresh(id string) error
 	DeletePassword(email string) error
+	DeleteInvalidLoginAttempt(usernameConnID string) error
 	DeleteOfflineSessions(userID string, connID string) error
 	DeleteConnector(id string) error
 
@@ -118,6 +127,7 @@ type Storage interface {
 	UpdateAuthRequest(id string, updater func(a AuthRequest) (AuthRequest, error)) error
 	UpdateRefreshToken(id string, updater func(r RefreshToken) (RefreshToken, error)) error
 	UpdatePassword(email string, updater func(p Password) (Password, error)) error
+	UpdateInvalidLoginAttempt(usernameConnID string, updater func(u InvalidLoginAttempt) (InvalidLoginAttempt, error)) error
 	UpdateOfflineSessions(userID string, connID string, updater func(s OfflineSessions) (OfflineSessions, error)) error
 	UpdateConnector(id string, updater func(c Connector) (Connector, error)) error
 	UpdateDeviceToken(deviceCode string, updater func(t DeviceToken) (DeviceToken, error)) error
@@ -130,8 +140,8 @@ type Storage interface {
 // Client represents an OAuth2 client.
 //
 // For further reading see:
-//   * Trusted peers: https://developers.google.com/identity/protocols/CrossClientAuth
-//   * Public clients: https://developers.google.com/api-client-library/python/auth/installed-app
+//   - Trusted peers: https://developers.google.com/identity/protocols/CrossClientAuth
+//   - Public clients: https://developers.google.com/api-client-library/python/auth/installed-app
 type Client struct {
 	// Client ID and secret used to identify the client.
 	ID        string `json:"id" yaml:"id"`
