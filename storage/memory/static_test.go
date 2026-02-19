@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -193,6 +194,106 @@ func TestStaticPasswords(t *testing.T) {
 				}
 				if n := len(passwords); n != 3 {
 					return fmt.Errorf("expected 3 passwords got %d", n)
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		err := tc.action()
+		if err != nil && !tc.wantErr {
+			t.Errorf("%s: %v", tc.name, err)
+		}
+		if err == nil && tc.wantErr {
+			t.Errorf("%s: expected error, didn't get one", tc.name)
+		}
+	}
+}
+
+func TestStaticBlockedUsers(t *testing.T) {
+	logger := &logrus.Logger{
+		Out:       os.Stderr,
+		Formatter: &logrus.TextFormatter{DisableColors: true},
+		Level:     logrus.DebugLevel,
+	}
+	backing := New(logger)
+
+	u1 := storage.InvalidLoginAttempt{UsernameConnID: "foo_secret:ldap", InvalidLoginAttemptsCount: 0}
+	u2 := storage.InvalidLoginAttempt{UsernameConnID: "bar_secret:local", InvalidLoginAttemptsCount: 4}
+	u3 := storage.InvalidLoginAttempt{UsernameConnID: "spam_secret:local", InvalidLoginAttemptsCount: 2}
+	u4 := storage.InvalidLoginAttempt{UsernameConnID: "Spam_secret:ldap", InvalidLoginAttemptsCount: 5}
+
+	backing.CreateInvalidLoginAttempt(u1)
+	s := storage.WithStaticInvalidLoginAttempt(backing, []storage.InvalidLoginAttempt{u2}, logger)
+
+	tests := []struct {
+		name    string
+		action  func() error
+		wantErr bool
+	}{
+		{
+			name: "get InvalidLoginAttempt from static storage",
+			action: func() error {
+				_, err := s.GetInvalidLoginAttempt(u2.UsernameConnID)
+				return err
+			},
+		},
+		{
+			name: "get InvalidLoginAttempt from backing storage",
+			action: func() error {
+				_, err := s.GetInvalidLoginAttempt(u1.UsernameConnID)
+				return err
+			},
+		},
+		{
+			name: "get InvalidLoginAttempt from static storage with casing",
+			action: func() error {
+				_, err := s.GetInvalidLoginAttempt(strings.ToUpper(u2.UsernameConnID))
+				return err
+			},
+		},
+		{
+			name: "update static InvalidLoginAttempt",
+			action: func() error {
+				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
+					u.UsernameConnID = "new_" + u.UsernameConnID
+					return u, nil
+				}
+				return s.UpdateInvalidLoginAttempt(u2.UsernameConnID, updater)
+			},
+			wantErr: true,
+		},
+		{
+			name: "update non-static InvalidLoginAttempt",
+			action: func() error {
+				updater := func(u storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error) {
+					u.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount + 1
+					u.UpdatedAt = time.Now()
+					return u, nil
+				}
+				return s.UpdateInvalidLoginAttempt(u1.UsernameConnID, updater)
+			},
+		},
+		{
+			name: "create InvalidLoginAttempt",
+			action: func() error {
+				if err := s.CreateInvalidLoginAttempt(u4); err != nil {
+					return err
+				}
+				return s.CreateInvalidLoginAttempt(u3)
+			},
+			wantErr: true,
+		},
+		{
+			name: "get InvalidLoginAttempt",
+			action: func() error {
+				u, err := s.GetInvalidLoginAttempt(u4.UsernameConnID)
+				if err != nil {
+					return err
+				}
+				if strings.Compare(u.UsernameConnID, u4.UsernameConnID) != 0 {
+					return fmt.Errorf("expected %s InvalidLoginAttempt got %s", u4.UsernameConnID, u.UsernameConnID)
 				}
 				return nil
 			},

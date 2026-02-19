@@ -15,29 +15,31 @@ import (
 )
 
 const (
-	kindAuthCode        = "AuthCode"
-	kindAuthRequest     = "AuthRequest"
-	kindClient          = "OAuth2Client"
-	kindRefreshToken    = "RefreshToken"
-	kindKeys            = "SigningKey"
-	kindPassword        = "Password"
-	kindOfflineSessions = "OfflineSessions"
-	kindConnector       = "Connector"
-	kindDeviceRequest   = "DeviceRequest"
-	kindDeviceToken     = "DeviceToken"
+	kindAuthCode            = "AuthCode"
+	kindAuthRequest         = "AuthRequest"
+	kindClient              = "OAuth2Client"
+	kindRefreshToken        = "RefreshToken"
+	kindKeys                = "SigningKey"
+	kindPassword            = "Password"
+	kindInvalidLoginAttempt = "InvalidLoginAttempt"
+	kindOfflineSessions     = "OfflineSessions"
+	kindConnector           = "Connector"
+	kindDeviceRequest       = "DeviceRequest"
+	kindDeviceToken         = "DeviceToken"
 )
 
 const (
-	resourceAuthCode        = "authcodes"
-	resourceAuthRequest     = "authrequests"
-	resourceClient          = "oauth2clients"
-	resourceRefreshToken    = "refreshtokens"
-	resourceKeys            = "signingkeies" // Kubernetes attempts to pluralize.
-	resourcePassword        = "passwords"
-	resourceOfflineSessions = "offlinesessionses" // Again attempts to pluralize.
-	resourceConnector       = "connectors"
-	resourceDeviceRequest   = "devicerequests"
-	resourceDeviceToken     = "devicetokens"
+	resourceAuthCode            = "authcodes"
+	resourceAuthRequest         = "authrequests"
+	resourceClient              = "oauth2clients"
+	resourceRefreshToken        = "refreshtokens"
+	resourceKeys                = "signingkeies" // Kubernetes attempts to pluralize.
+	resourcePassword            = "passwords"
+	resourceInvalidLoginAttempt = "InvalidLoginAttempt"
+	resourceOfflineSessions     = "offlinesessionses" // Again attempts to pluralize.
+	resourceConnector           = "connectors"
+	resourceDeviceRequest       = "devicerequests"
+	resourceDeviceToken         = "devicetokens"
 )
 
 const (
@@ -248,6 +250,10 @@ func (cli *client) CreatePassword(p storage.Password) error {
 	return cli.post(resourcePassword, cli.fromStoragePassword(p))
 }
 
+func (cli *client) CreateInvalidLoginAttempt(u storage.InvalidLoginAttempt) error {
+	return cli.post(resourceInvalidLoginAttempt, cli.fromStorageInvalidLoginAttempt(u))
+}
+
 func (cli *client) CreateRefresh(r storage.RefreshToken) error {
 	return cli.post(resourceRefreshToken, cli.fromStorageRefreshToken(r))
 }
@@ -304,6 +310,14 @@ func (cli *client) GetPassword(email string) (storage.Password, error) {
 	return toStoragePassword(p), nil
 }
 
+func (cli *client) GetInvalidLoginAttempt(username_conn_id string) (storage.InvalidLoginAttempt, error) {
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
+	if err != nil {
+		return storage.InvalidLoginAttempt{}, err
+	}
+	return toStorageInvalidLoginAttempt(u), nil
+}
+
 func (cli *client) getPassword(email string) (Password, error) {
 	// TODO(ericchiang): Figure out whose job it is to lowercase emails.
 	email = strings.ToLower(email)
@@ -316,6 +330,19 @@ func (cli *client) getPassword(email string) (Password, error) {
 		return Password{}, fmt.Errorf("get email: email %q mapped to password with email %q", email, p.Email)
 	}
 	return p, nil
+}
+
+func (cli *client) getInvalidLoginAttempt(username_conn_id string) (InvalidLoginAttempt, error) {
+	username_conn_id = strings.ToLower(username_conn_id)
+	var u InvalidLoginAttempt
+	name := cli.idToName(username_conn_id)
+	if err := cli.get(resourceInvalidLoginAttempt, name, &u); err != nil {
+		return InvalidLoginAttempt{}, err
+	}
+	if username_conn_id != u.UsernameConnID {
+		return InvalidLoginAttempt{}, fmt.Errorf("get InvalidLoginAttempt: username_conn_id %q mapped to InvalidLoginAttempt with username_conn_id %q", username_conn_id, u.UsernameConnID)
+	}
+	return u, nil
 }
 
 func (cli *client) GetKeys() (storage.Keys, error) {
@@ -437,6 +464,15 @@ func (cli *client) DeletePassword(email string) error {
 	return cli.delete(resourcePassword, p.ObjectMeta.Name)
 }
 
+func (cli *client) DeleteInvalidLoginAttempt(username_conn_id string) error {
+	// Check for hash collision.
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
+	if err != nil {
+		return err
+	}
+	return cli.delete(resourceInvalidLoginAttempt, u.ObjectMeta.Name)
+}
+
 func (cli *client) DeleteOfflineSessions(userID string, connID string) error {
 	// Check for hash collision.
 	o, err := cli.getOfflineSessions(userID, connID)
@@ -509,6 +545,24 @@ func (cli *client) UpdatePassword(email string, updater func(old storage.Passwor
 	newPassword := cli.fromStoragePassword(updated)
 	newPassword.ObjectMeta = p.ObjectMeta
 	return cli.put(resourcePassword, p.ObjectMeta.Name, newPassword)
+}
+
+func (cli *client) UpdateInvalidLoginAttempt(username_conn_id string, updater func(old storage.InvalidLoginAttempt) (storage.InvalidLoginAttempt, error)) error {
+	u, err := cli.getInvalidLoginAttempt(username_conn_id)
+	if err != nil {
+		return err
+	}
+
+	updated, err := updater(toStorageInvalidLoginAttempt(u))
+	if err != nil {
+		return err
+	}
+	updated.InvalidLoginAttemptsCount = u.InvalidLoginAttemptsCount
+	updated.UpdatedAt = u.UpdatedAt
+
+	newInvalidLoginAttempt := cli.fromStorageInvalidLoginAttempt(updated)
+	newInvalidLoginAttempt.ObjectMeta = u.ObjectMeta
+	return cli.put(resourceInvalidLoginAttempt, u.ObjectMeta.Name, newInvalidLoginAttempt)
 }
 
 func (cli *client) UpdateOfflineSessions(userID string, connID string, updater func(old storage.OfflineSessions) (storage.OfflineSessions, error)) error {
