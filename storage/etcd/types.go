@@ -194,8 +194,8 @@ func toStorageClaims(i Claims) storage.Claims {
 
 // Keys is a mirrored struct from storage with JSON struct tags
 type Keys struct {
-	SigningKey        *jose.JSONWebKey          `json:"signing_key,omitempty"`
-	SigningKeyPub     *jose.JSONWebKey          `json:"signing_key_pub,omitempty"`
+	SigningKey       *jose.JSONWebKey          `json:"signing_key,omitempty"`
+	SigningKeyPub    *jose.JSONWebKey          `json:"signing_key_pub,omitempty"`
 	VerificationKeys []storage.VerificationKey `json:"verification_keys"`
 	NextRotation     time.Time                 `json:"next_rotation"`
 }
