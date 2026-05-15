@@ -1,4 +1,4 @@
-FROM golang:1.15.6-alpine3.12
+FROM golang:1.24-alpine3.21
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -22,7 +22,7 @@ COPY . .
 
 RUN make release-binary
 
-FROM alpine:3.12
+FROM alpine:3.21
 
 WORKDIR /
 
