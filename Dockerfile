@@ -8,7 +8,8 @@ WORKDIR /go/src/github.com/dexidp/dex
 
 ENV GOOS=${TARGETOS} \
   GOARCH=${TARGETARCH} \
-  GOARM=${TARGETVARIANT}
+  GOARM=${TARGETVARIANT} \
+  CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 
 RUN apk add --no-cache --update alpine-sdk
 
