@@ -1,4 +1,4 @@
-FROM golang:1.15.6-alpine3.12
+FROM golang:1.24-alpine3.21
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -8,7 +8,8 @@ WORKDIR /go/src/github.com/dexidp/dex
 
 ENV GOOS=${TARGETOS} \
   GOARCH=${TARGETARCH} \
-  GOARM=${TARGETVARIANT}
+  GOARM=${TARGETVARIANT} \
+  CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 
 RUN apk add --no-cache --update alpine-sdk
 
@@ -22,7 +23,7 @@ COPY . .
 
 RUN make release-binary
 
-FROM alpine:3.12
+FROM alpine:3.21
 
 WORKDIR /
 
