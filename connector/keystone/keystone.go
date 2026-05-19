@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/dexidp/dex/connector"
@@ -35,15 +35,16 @@ type domainKeystone struct {
 // Config holds the configuration parameters for Keystone connector.
 // Keystone should expose API v3
 // An example config:
-//	connectors:
-//		type: keystone
-//		id: keystone
-//		name: Keystone
-//		config:
-//			keystoneHost: http://example:5000
-//			domain: default
-//      keystoneUsername: demo
-//      keystonePassword: DEMO_PASS
+//
+//		connectors:
+//			type: keystone
+//			id: keystone
+//			name: Keystone
+//			config:
+//				keystoneHost: http://example:5000
+//				domain: default
+//	     keystoneUsername: demo
+//	     keystonePassword: DEMO_PASS
 type Config struct {
 	Domain        string `json:"domain"`
 	Host          string `json:"keystoneHost"`
@@ -133,7 +134,7 @@ func (p *conn) Login(ctx context.Context, scopes connector.Scopes, username, pas
 		return identity, false, nil
 	}
 	token := resp.Header.Get("X-Subject-Token")
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return identity, false, err
 	}
@@ -167,8 +168,7 @@ func (p *conn) Login(ctx context.Context, scopes connector.Scopes, username, pas
 
 func (p *conn) Prompt() string { return "username" }
 
-func (p *conn) Refresh(
-	ctx context.Context, scopes connector.Scopes, identity connector.Identity) (connector.Identity, error) {
+func (p *conn) Refresh(ctx context.Context, scopes connector.Scopes, identity connector.Identity) (connector.Identity, error) {
 	token, err := p.getAdminToken(ctx)
 	if err != nil {
 		return identity, fmt.Errorf("keystone: failed to obtain admin token: %v", err)
@@ -260,7 +260,7 @@ func (p *conn) getUser(ctx context.Context, userID string, token string) (*userR
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func (p *conn) getUserGroups(ctx context.Context, userID string, token string) (
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

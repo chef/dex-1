@@ -9,7 +9,7 @@ import (
 
 	"github.com/kylelemons/godebug/pretty"
 	"golang.org/x/crypto/bcrypt"
-	jose "gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/go-jose/go-jose.v2"
 
 	"github.com/dexidp/dex/storage"
 )

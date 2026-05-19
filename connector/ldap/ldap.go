@@ -7,8 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 
 	"gopkg.in/ldap.v2"
 
@@ -219,7 +219,7 @@ func (c *Config) OpenConnector(logger log.Logger) (interface {
 	connector.Connector
 	connector.PasswordConnector
 	connector.RefreshConnector
-}, error) {
+}, error) { //nolint
 	return c.openConnector(logger)
 }
 
@@ -257,7 +257,7 @@ func (c *Config) openConnector(logger log.Logger) (*ldapConnector, error) {
 		data := c.RootCAData
 		if len(data) == 0 {
 			var err error
-			if data, err = ioutil.ReadFile(c.RootCA); err != nil {
+			if data, err = os.ReadFile(c.RootCA); err != nil {
 				return nil, fmt.Errorf("ldap: read ca file: %v", err)
 			}
 		}

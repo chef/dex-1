@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,7 +31,7 @@ const (
 	mysqlErrUnknownSysVar       = 1193
 )
 
-// nolint
+//nolint:staticheck
 const (
 	// postgres SSL modes
 	pgSSLDisable    = "disable"
@@ -40,7 +40,7 @@ const (
 	pgSSLVerifyFull = "verify-full"
 )
 
-// nolint
+//nolint:sql
 const (
 	// MySQL SSL modes
 	mysqlSSLTrue       = "true"
@@ -316,7 +316,7 @@ func (s *MySQL) makeTLSConfig() error {
 	cfg := &tls.Config{}
 	if s.SSL.CAFile != "" {
 		rootCertPool := x509.NewCertPool()
-		pem, err := ioutil.ReadFile(s.SSL.CAFile)
+		pem, err := os.ReadFile(s.SSL.CAFile)
 		if err != nil {
 			return err
 		}

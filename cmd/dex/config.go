@@ -20,14 +20,15 @@ import (
 
 // Config is the config format for the main application.
 type Config struct {
-	Issuer    string    `json:"issuer"`
-	Storage   Storage   `json:"storage"`
-	Web       Web       `json:"web"`
-	Telemetry Telemetry `json:"telemetry"`
-	OAuth2    OAuth2    `json:"oauth2"`
-	GRPC      GRPC      `json:"grpc"`
-	Expiry    Expiry    `json:"expiry"`
-	Logger    Logger    `json:"logger"`
+	Issuer               string               `json:"issuer"`
+	Storage              Storage              `json:"storage"`
+	Web                  Web                  `json:"web"`
+	Telemetry            Telemetry            `json:"telemetry"`
+	OAuth2               OAuth2               `json:"oauth2"`
+	GRPC                 GRPC                 `json:"grpc"`
+	Expiry               Expiry               `json:"expiry"`
+	InvalidLoginAttempts InvalidLoginAttempts `json:"invalidLoginAttempts` //nolint
+	Logger               Logger               `json:"logger"`
 
 	Frontend server.WebConfig `json:"frontend"`
 
@@ -290,4 +291,10 @@ type Logger struct {
 
 	// Format specifies the format to be used for logging.
 	Format string `json:"format"`
+}
+
+type InvalidLoginAttempts struct {
+	EnableInvalidLoginAttempts     bool  `json:"enableInvalidLoginAttempts"`
+	BlockedDurationInMinutes       int32 `json:"blockedDurationInMinutes"`
+	MaxInvalidLoginAttemptsAllowed int32 `json:"maxInvalidLoginAttemptsAllowed"`
 }

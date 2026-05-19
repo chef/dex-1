@@ -2,7 +2,7 @@
 
 package conformance
 
-import jose "gopkg.in/square/go-jose.v2"
+import jose "gopkg.in/go-jose/go-jose.v2"
 
 type keyPair struct {
 	Public  *jose.JSONWebKey
@@ -11,7 +11,6 @@ type keyPair struct {
 
 // keys are generated beforehand so we don't have to generate RSA keys for every test.
 var jsonWebKeys = []keyPair{
-
 	{
 		Public: mustLoadJWK(`{
 			"use": "sig",

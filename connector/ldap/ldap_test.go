@@ -3,7 +3,7 @@ package ldap
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -931,14 +931,13 @@ func runTests(t *testing.T, schema string, connMethod connectionMethod, config *
 		t.Fatal(err)
 	}
 
-	tempDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
+	tempDir := os.TempDir()
+
+	defer os.Remove(tempDir)
 
 	schemaPath := filepath.Join(tempDir, "schema.ldif")
-	if err := ioutil.WriteFile(schemaPath, []byte(schema), 0777); err != nil {
+
+	if err := os.WriteFile(schemaPath, []byte(schema), 0777); err != nil { //nolint
 		t.Fatal(err)
 	}
 
@@ -974,7 +973,7 @@ func runTests(t *testing.T, schema string, connMethod connectionMethod, config *
 			if err == nil {
 				defer logs.Close()
 
-				logLines, err := ioutil.ReadAll(logs)
+				logLines, err := io.ReadAll(logs)
 				if err != nil {
 					t.Log(string(logLines))
 				}
@@ -1022,7 +1021,7 @@ func runTests(t *testing.T, schema string, connMethod connectionMethod, config *
 	c.BindDN = "cn=admin,dc=example,dc=org"
 	c.BindPW = "admin"
 
-	l := &logrus.Logger{Out: ioutil.Discard, Formatter: &logrus.TextFormatter{}}
+	l := &logrus.Logger{Out: io.Discard, Formatter: &logrus.TextFormatter{}}
 
 	conn, err := c.openConnector(l)
 	if err != nil {
